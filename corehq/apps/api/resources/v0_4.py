@@ -53,6 +53,8 @@ class XFormInstanceResource(SimpleSortableResourceMixin, v0_3.XFormInstanceResou
             and bundle.obj.openrosa_headers.get('HTTP_X_OPENROSA_VERSION')
         )
 
+    processing_error = fields.CharField(attribute='problem', blank=True, null=True)
+
     # Prevent hitting Couch to md5 the attachment. However, there is no way to
     # eliminate a tastypie field defined in a parent class.
     md5 = fields.CharField(attribute='uiversion', blank=True, null=True)
