@@ -59,6 +59,9 @@ class Repeater(Document, UnicodeMixIn):
     domain = StringProperty()
     url = StringProperty()
 
+    # add format
+    format = StringProperty(choices=["xml", "json"], default="xml")
+
     def register(self, payload, next_check=None):
         try:
             payload_id = payload.get_id
@@ -133,7 +136,11 @@ class FormRepeater(Repeater):
         return XFormInstance.get(repeat_record.payload_id)
 
     def get_payload(self, repeat_record):
-        return self._payload_doc(repeat_record).get_xml()
+        doc = self._payload_doc(repeat_record)
+        if self.format == "json":
+            return doc.to_json()
+        else:
+            return doc.get_xml()
 
     def get_headers(self, repeat_record):
         return {
