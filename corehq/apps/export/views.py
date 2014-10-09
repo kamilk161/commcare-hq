@@ -92,7 +92,6 @@ class BaseExportView(BaseProjectDataView):
 
 class BaseCreateCustomExportView(BaseExportView):
     # this view likely needs a lot more cleanup. will leave that for a later time...
-
     @property
     @memoized
     def export_helper(self):
@@ -220,7 +219,10 @@ BASIC_FORM_SCHEMA = {
                 "#text": "string"
             },
             "timeStart": "string",
-            "deviceID": "string"
+            "deviceID": "string",
+            "location": {
+                "#text": "string",
+            },
         },
         "@version": "string"
     },
