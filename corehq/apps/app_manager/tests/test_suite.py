@@ -229,6 +229,13 @@ class SuiteTest(SimpleTestCase, TestFileMixin):
         }
         self.assertXmlEqual(self.get_xml('case-list-form-suite'), app.create_suite())
 
+    def test_case_list_registration_form_parent_child(self):
+        """
+        Ensure form filter gets added correctly and appropriate instances get added to the entry.
+        """
+        app = Application.wrap(self.get_json('parent-child-case-list-form'))
+        self.assertXmlEqual(self.get_xml('parent-child-case-list-form'), app.create_suite())
+
 
 class RegexTest(SimpleTestCase):
 

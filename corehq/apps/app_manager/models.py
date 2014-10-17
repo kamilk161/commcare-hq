@@ -919,8 +919,18 @@ class Form(IndexedFormBase, NavMenuItemMediaMixin):
         return self.requires == "referral"
 
     def is_registration_form(self, case_type=None):
-        return not self.requires_case() and 'open_case' in self.active_actions() and \
-            (not case_type or self.get_module().case_type == case_type)
+        """
+        Does this form register a single case of the specified type.
+        """
+        if not case_type or self.get_module().case_type == case_type:
+            return not self.requires_case() and 'open_case' in self.active_actions()
+        elif case_type and 'subcases' in self.active_actions():
+            return any(
+                sub for sub in self.actions.subcases
+                if sub.case_type == case_type and not sub.repeat_context
+            )
+
+        return False
 
     def extended_build_validation(self, error_meta, xml_valid, validate_module=True):
         errors = []
@@ -1447,6 +1457,7 @@ class Module(ModuleBase):
                 'type': 'no parent select id',
                 'module': self.get_module_info()
             })
+
         return errors
 
     def export_json(self, dump_json=True, keep_unique_id=False):

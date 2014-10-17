@@ -1,0 +1,927 @@
+{
+    "_attachments": {
+        "1b5970f1251e2f5a14a5b6d562bf1c53fdf1eda8.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<h:html xmlns:h=\"http://www.w3.org/1999/xhtml\" xmlns:orx=\"http://openrosa.org/jr/xforms\" xmlns=\"http://www.w3.org/2002/xforms\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:jr=\"http://openrosa.org/javarosa\" xmlns:vellum=\"http://commcarehq.org/xforms/vellum\">\n\t<h:head>\n\t\t<h:title>Update chick</h:title>\n\t\t<model>\n\t\t\t<instance>\n\t\t\t\t<data xmlns:jrm=\"http://dev.commcarehq.org/jr/xforms\" xmlns=\"http://openrosa.org/formdesigner/8561489A-0539-4C0A-99DA-A74C87659BE3\" uiVersion=\"1\" version=\"1\" name=\"Update chick\">\n\t\t\t\t\t<name />\n\t\t\t\t</data>\n\t\t\t</instance>\n\t\t\t<bind nodeset=\"/data/name\" type=\"xsd:string\" />\n\t\t\t<itext>\n\t\t\t\t<translation lang=\"en\" default=\"\">\n\t\t\t\t\t<text id=\"name-label\">\n\t\t\t\t\t\t<value>name</value>\n\t\t\t\t\t</text>\n\t\t\t\t</translation>\n\t\t\t</itext>\n\t\t</model>\n\t</h:head>\n\t<h:body>\n\t\t<input ref=\"/data/name\">\n\t\t\t<label ref=\"jr:itext('name-label')\" />\n\t\t</input>\n\t</h:body>\n</h:html>",
+        "224c4a960498b5aadf29cc1a011b29a65f31c19e.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<h:html xmlns:h=\"http://www.w3.org/1999/xhtml\" xmlns:orx=\"http://openrosa.org/jr/xforms\" xmlns=\"http://www.w3.org/2002/xforms\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:jr=\"http://openrosa.org/javarosa\" xmlns:vellum=\"http://commcarehq.org/xforms/vellum\">\n\t<h:head>\n\t\t<h:title>Register chicks</h:title>\n\t\t<model>\n\t\t\t<instance>\n\t\t\t\t<data xmlns:jrm=\"http://dev.commcarehq.org/jr/xforms\" xmlns=\"http://openrosa.org/formdesigner/C4D92842-5985-479E-B6FF-A3905CF79CE9\" uiVersion=\"1\" version=\"1\" name=\"Register chicks\">\n\t\t\t\t\t<question3 />\n\t\t\t\t</data>\n\t\t\t</instance>\n\t\t\t<bind nodeset=\"/data/question3\" type=\"xsd:string\" />\n\t\t\t<itext>\n\t\t\t\t<translation lang=\"en\" default=\"\">\n\t\t\t\t\t<text id=\"question2/question3-label\">\n\t\t\t\t\t\t<value>question3</value>\n\t\t\t\t\t</text>\n\t\t\t\t</translation>\n\t\t\t</itext>\n\t\t</model>\n\t</h:head>\n\t<h:body>\n\t\t<input ref=\"/data/question3\">\n\t\t\t<label ref=\"jr:itext('question2/question3-label')\" />\n\t\t</input>\n\t</h:body>\n</h:html>",
+        "346ed6a47525b96d66a54daa88c92391b4b493a1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<h:html xmlns:h=\"http://www.w3.org/1999/xhtml\" xmlns:orx=\"http://openrosa.org/jr/xforms\" xmlns=\"http://www.w3.org/2002/xforms\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:jr=\"http://openrosa.org/javarosa\" xmlns:vellum=\"http://commcarehq.org/xforms/vellum\">\n\t<h:head>\n\t\t<h:title>Register bird and chicks</h:title>\n\t\t<model>\n\t\t\t<instance>\n\t\t\t\t<data xmlns:jrm=\"http://dev.commcarehq.org/jr/xforms\" xmlns=\"http://openrosa.org/formdesigner/4A9D4D11-7914-4419-91B8-2A00B789679F\" uiVersion=\"1\" version=\"1\" name=\"Register bird and chicks\">\n\t\t\t\t\t<name />\n\t\t\t\t\t<chick_name />\n\t\t\t\t</data>\n\t\t\t</instance>\n\t\t\t<bind nodeset=\"/data/name\" type=\"xsd:string\" />\n\t\t\t<bind nodeset=\"/data/chick_name\" type=\"xsd:string\" />\n\t\t\t<itext>\n\t\t\t\t<translation lang=\"en\" default=\"\">\n\t\t\t\t\t<text id=\"name-label\">\n\t\t\t\t\t\t<value>name</value>\n\t\t\t\t\t</text>\n\t\t\t\t\t<text id=\"chick_name-label\">\n\t\t\t\t\t\t<value>chick name</value>\n\t\t\t\t\t</text>\n\t\t\t\t</translation>\n\t\t\t</itext>\n\t\t</model>\n\t</h:head>\n\t<h:body>\n\t\t<input ref=\"/data/name\">\n\t\t\t<label ref=\"jr:itext('name-label')\" />\n\t\t</input>\n\t\t<input ref=\"/data/chick_name\">\n\t\t\t<label ref=\"jr:itext('chick_name-label')\" />\n\t\t</input>\n\t</h:body>\n</h:html>",
+        "73745f9807a83a9c2682f134961d54016c74f8ef.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<h:html xmlns:h=\"http://www.w3.org/1999/xhtml\" xmlns:orx=\"http://openrosa.org/jr/xforms\" xmlns=\"http://www.w3.org/2002/xforms\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:jr=\"http://openrosa.org/javarosa\" xmlns:vellum=\"http://commcarehq.org/xforms/vellum\">\n\t<h:head>\n\t\t<h:title>Update chick</h:title>\n\t\t<model>\n\t\t\t<instance>\n\t\t\t\t<data xmlns:jrm=\"http://dev.commcarehq.org/jr/xforms\" xmlns=\"http://openrosa.org/formdesigner/5E2E4587-60DA-4763-9FBB-C649F78E3C59\" uiVersion=\"1\" version=\"1\" name=\"Update chick\">\n\t\t\t\t\t<name />\n\t\t\t\t</data>\n\t\t\t</instance>\n\t\t\t<bind nodeset=\"/data/name\" type=\"xsd:string\" />\n\t\t\t<itext>\n\t\t\t\t<translation lang=\"en\" default=\"\">\n\t\t\t\t\t<text id=\"name-label\">\n\t\t\t\t\t\t<value>name</value>\n\t\t\t\t\t</text>\n\t\t\t\t</translation>\n\t\t\t</itext>\n\t\t</model>\n\t</h:head>\n\t<h:body>\n\t\t<input ref=\"/data/name\">\n\t\t\t<label ref=\"jr:itext('name-label')\" />\n\t\t</input>\n\t</h:body>\n</h:html>"
+    },
+    "admin_password": null,
+    "admin_password_charset": "n",
+    "application_version": "2.0",
+    "attribution_notes": null,
+    "auto_gps_capture": false,
+    "build_broken": false,
+    "build_broken_reason": null,
+    "build_comment": null,
+    "build_langs": [
+        "en"
+    ],
+    "build_signed": true,
+    "build_spec": {
+        "build_number": null,
+        "doc_type": "BuildSpec",
+        "latest": true,
+        "version": "2.0.0"
+    },
+    "built_on": null,
+    "built_with": {
+        "build_number": null,
+        "datetime": null,
+        "doc_type": "BuildRecord",
+        "latest": null,
+        "signed": true,
+        "version": null
+    },
+    "cached_properties": {},
+    "case_sharing": false,
+    "cloudcare_enabled": false,
+    "comment_from": null,
+    "commtrack_enabled": false,
+    "commtrack_requisition_mode": null,
+    "copy_history": [],
+    "deployment_date": null,
+    "description": null,
+    "doc_type": "Application",
+    "is_released": false,
+    "langs": [
+        "en"
+    ],
+    "modules": [
+        {
+            "case_details": {
+                "doc_type": "DetailPair",
+                "long": {
+                    "columns": [
+                        {
+                            "advanced": "",
+                            "calc_xpath": ".",
+                            "doc_type": "DetailColumn",
+                            "enum": [],
+                            "field": "name",
+                            "filter_xpath": "",
+                            "format": "plain",
+                            "header": {
+                                "en": "Name"
+                            },
+                            "late_flag": 30,
+                            "model": "case",
+                            "time_ago_interval": 365.25
+                        }
+                    ],
+                    "display": "long",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                },
+                "short": {
+                    "columns": [
+                        {
+                            "advanced": "",
+                            "calc_xpath": ".",
+                            "doc_type": "DetailColumn",
+                            "enum": [],
+                            "field": "name",
+                            "filter_xpath": "",
+                            "format": "plain",
+                            "header": {
+                                "en": "Name"
+                            },
+                            "late_flag": 30,
+                            "model": "case",
+                            "time_ago_interval": 365.25
+                        }
+                    ],
+                    "display": "short",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                }
+            },
+            "case_label": {
+                "en": "Cases"
+            },
+            "case_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "case_list_form": {
+                "doc_type": "CaseListForm",
+                "form_id": "",
+                "label": {
+                    "en": ""
+                },
+                "media_audio": null,
+                "media_image": null
+            },
+            "case_type": "bird",
+            "doc_type": "Module",
+            "forms": [
+                {
+                    "actions": {
+                        "case_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {}
+                        },
+                        "close_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "close_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "doc_type": "FormActions",
+                        "open_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "OpenCaseAction",
+                            "external_id": null,
+                            "name_path": "/data/name"
+                        },
+                        "open_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "OpenReferralAction",
+                            "followup_date": null,
+                            "name_path": null
+                        },
+                        "referral_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {}
+                        },
+                        "subcases": [
+                            {
+                                "case_name": "/data/chick_name",
+                                "case_properties": {},
+                                "case_type": "chick",
+                                "close_condition": {
+                                    "answer": null,
+                                    "doc_type": "FormActionCondition",
+                                    "operator": null,
+                                    "question": null,
+                                    "type": "never"
+                                },
+                                "condition": {
+                                    "answer": null,
+                                    "doc_type": "FormActionCondition",
+                                    "operator": null,
+                                    "question": null,
+                                    "type": "always"
+                                },
+                                "doc_type": "OpenSubCaseAction",
+                                "reference_id": null,
+                                "repeat_context": null
+                            }
+                        ],
+                        "update_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "UpdateCaseAction",
+                            "update": {}
+                        },
+                        "update_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "UpdateReferralAction",
+                            "followup_date": null
+                        }
+                    },
+                    "auto_gps_capture": false,
+                    "doc_type": "Form",
+                    "form_filter": "",
+                    "form_type": "module_form",
+                    "media_audio": null,
+                    "media_image": null,
+                    "name": {
+                        "en": "Register bird and chick"
+                    },
+                    "post_form_workflow": "default",
+                    "requires": "none",
+                    "show_count": false,
+                    "unique_id": "346ed6a47525b96d66a54daa88c92391b4b493a1",
+                    "version": null,
+                    "xmlns": "http://openrosa.org/formdesigner/4A9D4D11-7914-4419-91B8-2A00B789679F"
+                },
+                {
+                    "actions": {
+                        "case_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {}
+                        },
+                        "close_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "close_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "doc_type": "FormActions",
+                        "open_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "OpenCaseAction",
+                            "external_id": null,
+                            "name_path": null
+                        },
+                        "open_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "OpenReferralAction",
+                            "followup_date": null,
+                            "name_path": null
+                        },
+                        "referral_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {}
+                        },
+                        "subcases": [
+                            {
+                                "case_name": "/data/question3",
+                                "case_properties": {},
+                                "case_type": "chick",
+                                "close_condition": {
+                                    "answer": null,
+                                    "doc_type": "FormActionCondition",
+                                    "operator": null,
+                                    "question": null,
+                                    "type": "never"
+                                },
+                                "condition": {
+                                    "answer": null,
+                                    "doc_type": "FormActionCondition",
+                                    "operator": null,
+                                    "question": null,
+                                    "type": "always"
+                                },
+                                "doc_type": "OpenSubCaseAction",
+                                "reference_id": null,
+                                "repeat_context": null
+                            }
+                        ],
+                        "update_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "UpdateCaseAction",
+                            "update": {}
+                        },
+                        "update_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "UpdateReferralAction",
+                            "followup_date": null
+                        }
+                    },
+                    "auto_gps_capture": false,
+                    "doc_type": "Form",
+                    "form_filter": "",
+                    "form_type": "module_form",
+                    "media_audio": null,
+                    "media_image": null,
+                    "name": {
+                        "en": "Register chick"
+                    },
+                    "post_form_workflow": "default",
+                    "requires": "case",
+                    "show_count": false,
+                    "unique_id": "224c4a960498b5aadf29cc1a011b29a65f31c19e",
+                    "version": null,
+                    "xmlns": "http://openrosa.org/formdesigner/C4D92842-5985-479E-B6FF-A3905CF79CE9"
+                }
+            ],
+            "media_audio": null,
+            "media_image": null,
+            "module_type": "basic",
+            "name": {
+                "en": "Bird"
+            },
+            "parent_select": {
+                "active": false,
+                "doc_type": "ParentSelect",
+                "module_id": null,
+                "relationship": "parent"
+            },
+            "put_in_root": false,
+            "ref_details": {
+                "doc_type": "DetailPair",
+                "long": {
+                    "columns": [],
+                    "display": "long",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                },
+                "short": {
+                    "columns": [],
+                    "display": "short",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                }
+            },
+            "referral_label": {
+                "en": "Referrals"
+            },
+            "referral_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "task_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "unique_id": "2ef1fd77a3c5f38d7bc0401a43f52c0baf5a696"
+        },
+        {
+            "case_details": {
+                "doc_type": "DetailPair",
+                "long": {
+                    "columns": [
+                        {
+                            "advanced": "",
+                            "calc_xpath": ".",
+                            "doc_type": "DetailColumn",
+                            "enum": [],
+                            "field": "name",
+                            "filter_xpath": "",
+                            "format": "plain",
+                            "header": {
+                                "en": "Name"
+                            },
+                            "late_flag": 30,
+                            "model": "case",
+                            "time_ago_interval": 365.25
+                        }
+                    ],
+                    "display": "long",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                },
+                "short": {
+                    "columns": [
+                        {
+                            "advanced": "",
+                            "calc_xpath": ".",
+                            "doc_type": "DetailColumn",
+                            "enum": [],
+                            "field": "name",
+                            "filter_xpath": "",
+                            "format": "plain",
+                            "header": {
+                                "en": "Name"
+                            },
+                            "late_flag": 30,
+                            "model": "case",
+                            "time_ago_interval": 365.25
+                        }
+                    ],
+                    "display": "short",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                }
+            },
+            "case_label": {
+                "en": "Cases"
+            },
+            "case_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "case_list_form": {
+                "doc_type": "CaseListForm",
+                "form_id": "3bac4cbd7a24ec5db9550547f5583ea2e32f59a1",
+                "label": {
+                    "en": "Register chick"
+                },
+                "media_audio": null,
+                "media_image": null
+            },
+            "case_type": "chick",
+            "doc_type": "Module",
+            "forms": [
+                {
+                    "actions": {
+                        "case_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {
+                                "/data/name": "name"
+                            }
+                        },
+                        "close_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "close_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "doc_type": "FormActions",
+                        "open_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "OpenCaseAction",
+                            "external_id": null,
+                            "name_path": null
+                        },
+                        "open_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "OpenReferralAction",
+                            "followup_date": null,
+                            "name_path": null
+                        },
+                        "referral_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {}
+                        },
+                        "subcases": [],
+                        "update_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "UpdateCaseAction",
+                            "update": {
+                                "name": "/data/name"
+                            }
+                        },
+                        "update_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "UpdateReferralAction",
+                            "followup_date": null
+                        }
+                    },
+                    "auto_gps_capture": false,
+                    "doc_type": "Form",
+                    "form_filter": "",
+                    "form_type": "module_form",
+                    "media_audio": null,
+                    "media_image": null,
+                    "name": {
+                        "en": "Update chick"
+                    },
+                    "post_form_workflow": "default",
+                    "requires": "case",
+                    "show_count": false,
+                    "unique_id": "73745f9807a83a9c2682f134961d54016c74f8ef",
+                    "version": null,
+                    "xmlns": "http://openrosa.org/formdesigner/5E2E4587-60DA-4763-9FBB-C649F78E3C59"
+                }
+            ],
+            "media_audio": null,
+            "media_image": null,
+            "module_type": "basic",
+            "name": {
+                "en": "Chick"
+            },
+            "parent_select": {
+                "active": true,
+                "doc_type": "ParentSelect",
+                "module_id": "2ef1fd77a3c5f38d7bc0401a43f52c0baf5a696",
+                "relationship": "parent"
+            },
+            "put_in_root": false,
+            "ref_details": {
+                "doc_type": "DetailPair",
+                "long": {
+                    "columns": [],
+                    "display": "long",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                },
+                "short": {
+                    "columns": [],
+                    "display": "short",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                }
+            },
+            "referral_label": {
+                "en": "Referrals"
+            },
+            "referral_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "task_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "unique_id": "9978f51659f31a9f7afd5187e45c59f1c5943c3c"
+        },
+        {
+            "case_details": {
+                "doc_type": "DetailPair",
+                "long": {
+                    "columns": [
+                        {
+                            "advanced": "",
+                            "calc_xpath": ".",
+                            "doc_type": "DetailColumn",
+                            "enum": [],
+                            "field": "name",
+                            "filter_xpath": "",
+                            "format": "plain",
+                            "header": {
+                                "en": "Name"
+                            },
+                            "late_flag": 30,
+                            "model": "case",
+                            "time_ago_interval": 365.25
+                        }
+                    ],
+                    "display": "long",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                },
+                "short": {
+                    "columns": [
+                        {
+                            "advanced": "",
+                            "calc_xpath": ".",
+                            "doc_type": "DetailColumn",
+                            "enum": [],
+                            "field": "name",
+                            "filter_xpath": "",
+                            "format": "plain",
+                            "header": {
+                                "en": "Name"
+                            },
+                            "late_flag": 30,
+                            "model": "case",
+                            "time_ago_interval": 365.25
+                        }
+                    ],
+                    "display": "short",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                }
+            },
+            "case_label": {
+                "en": "Cases"
+            },
+            "case_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "case_list_form": {
+                "doc_type": "CaseListForm",
+                "form_id": "542012d1e8f0b84f234d190b6ab29155e884e63b",
+                "label": {
+                    "en": "register bird and chick"
+                },
+                "media_audio": null,
+                "media_image": null
+            },
+            "case_type": "chick",
+            "doc_type": "Module",
+            "forms": [
+                {
+                    "actions": {
+                        "case_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {}
+                        },
+                        "close_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "close_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "FormAction"
+                        },
+                        "doc_type": "FormActions",
+                        "open_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "OpenCaseAction",
+                            "external_id": null,
+                            "name_path": null
+                        },
+                        "open_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "OpenReferralAction",
+                            "followup_date": null,
+                            "name_path": null
+                        },
+                        "referral_preload": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "PreloadAction",
+                            "preload": {}
+                        },
+                        "subcases": [],
+                        "update_case": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": null,
+                                "question": null,
+                                "type": "always"
+                            },
+                            "doc_type": "UpdateCaseAction",
+                            "update": {
+                                "name": "/data/name"
+                            }
+                        },
+                        "update_referral": {
+                            "condition": {
+                                "answer": null,
+                                "doc_type": "FormActionCondition",
+                                "operator": "=",
+                                "question": null,
+                                "type": "never"
+                            },
+                            "doc_type": "UpdateReferralAction",
+                            "followup_date": null
+                        }
+                    },
+                    "auto_gps_capture": false,
+                    "doc_type": "Form",
+                    "form_filter": "",
+                    "form_type": "module_form",
+                    "media_audio": null,
+                    "media_image": null,
+                    "name": {
+                        "en": "Update chick"
+                    },
+                    "post_form_workflow": "default",
+                    "requires": "case",
+                    "show_count": false,
+                    "unique_id": "1b5970f1251e2f5a14a5b6d562bf1c53fdf1eda8",
+                    "version": null,
+                    "xmlns": "http://openrosa.org/formdesigner/8561489A-0539-4C0A-99DA-A74C87659BE3"
+                }
+            ],
+            "media_audio": null,
+            "media_image": null,
+            "module_type": "basic",
+            "name": {
+                "en": "Chick 2"
+            },
+            "parent_select": {
+                "active": true,
+                "doc_type": "ParentSelect",
+                "module_id": "2ef1fd77a3c5f38d7bc0401a43f52c0baf5a696",
+                "relationship": "parent"
+            },
+            "put_in_root": false,
+            "ref_details": {
+                "doc_type": "DetailPair",
+                "long": {
+                    "columns": [],
+                    "display": "long",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                },
+                "short": {
+                    "columns": [],
+                    "display": "short",
+                    "doc_type": "Detail",
+                    "sort_elements": []
+                }
+            },
+            "referral_label": {
+                "en": "Referrals"
+            },
+            "referral_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "task_list": {
+                "doc_type": "CaseList",
+                "label": {},
+                "show": false
+            },
+            "unique_id": "e8d2c7b9009ad984b4ce2401e51d9cd29df3c967"
+        }
+    ],
+    "multimedia_map": {},
+    "name": "Double management parent child test",
+    "phone_model": null,
+    "platform": "nokia/s40",
+    "profile": {
+        "features": {
+            "sense": "false",
+            "users": "true"
+        },
+        "properties": {
+            "ViewStyle": "v_chatterbox",
+            "cc-autoup-freq": "freq-never",
+            "cc-content-valid": "no",
+            "cc-entry-mode": "cc-entry-quick",
+            "cc-send-procedure": "cc-send-http",
+            "cc-send-unsent": "cc-su-auto",
+            "cc-user-mode": "cc-u-normal",
+            "extra_key_action": "audio",
+            "log_prop_daily": "log_never",
+            "log_prop_weekly": "log_short",
+            "logenabled": "Enabled",
+            "loose_media": "no",
+            "password_format": "n",
+            "purge-freq": "0",
+            "restore-tolerance": "loose",
+            "server-tether": "push-only",
+            "user_reg_server": "required"
+        }
+    },
+    "recipients": "",
+    "secure_submissions": true,
+    "show_user_registration": false,
+    "success_message": {},
+    "text_input": "roman",
+    "translation_strategy": "select-known",
+    "translations": {},
+    "use_custom_suite": false,
+    "user_registration": {
+        "auto_gps_capture": false,
+        "data_paths": {},
+        "doc_type": "UserRegistrationForm",
+        "form_type": "user_registration",
+        "name": {},
+        "password_path": "password",
+        "post_form_workflow": "default",
+        "show_count": false,
+        "unique_id": "f0836c22744ffb82256538907520d5dc4364a672",
+        "username_path": "username",
+        "version": null,
+        "xmlns": null
+    },
+    "user_type": null
+}

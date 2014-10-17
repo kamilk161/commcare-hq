@@ -779,7 +779,7 @@ class SuiteGenerator(SuiteGeneratorBase):
 
                             if module.case_list_form.form_id and detail_type.endswith('short'):
                                 # add form action to detail
-                                form = module.get_form_by_unique_id(module.case_list_form.form_id)
+                                form = self.app.get_form(module.case_list_form.form_id)
                                 d.action = Action(
                                     locale_id=self.id_strings.case_list_form_locale(module),
                                     media_image=module.case_list_form.media_image,

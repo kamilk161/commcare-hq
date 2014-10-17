@@ -1,0 +1,269 @@
+
+<?xml version='1.0' encoding='UTF-8'?>
+<suite version="40" descriptor="Suite File">
+  <xform>
+    <resource id="542012d1e8f0b84f234d190b6ab29155e884e63b" version="40">
+      <location authority="local">./modules-0/forms-0.xml</location>
+      <location authority="remote">./modules-0/forms-0.xml</location>
+    </resource>
+  </xform>
+  <xform>
+    <resource id="3bac4cbd7a24ec5db9550547f5583ea2e32f59a1" version="40">
+      <location authority="local">./modules-0/forms-1.xml</location>
+      <location authority="remote">./modules-0/forms-1.xml</location>
+    </resource>
+  </xform>
+  <xform>
+    <resource id="2a7151077d3fa392186fb5ca41a0dba36e369ed3" version="40">
+      <location authority="local">./modules-1/forms-0.xml</location>
+      <location authority="remote">./modules-1/forms-0.xml</location>
+    </resource>
+  </xform>
+  <xform>
+    <resource id="390b9419424bcb719401c736f11563892dac63dd" version="40">
+      <location authority="local">./modules-2/forms-0.xml</location>
+      <location authority="remote">./modules-2/forms-0.xml</location>
+    </resource>
+  </xform>
+  <locale language="default">
+    <resource id="app_default_strings" version="40">
+      <location authority="local">./default/app_strings.txt</location>
+      <location authority="remote">./default/app_strings.txt</location>
+    </resource>
+  </locale>
+  <locale language="en">
+    <resource id="app_en_strings" version="40">
+      <location authority="local">./en/app_strings.txt</location>
+      <location authority="remote">./en/app_strings.txt</location>
+    </resource>
+  </locale>
+  <detail id="m0_case_short">
+    <title>
+      <text>
+        <locale id="m0.case_short.title"/>
+      </text>
+    </title>
+    <field sort="default">
+      <header>
+        <text>
+          <locale id="m0.case_short.case_name_1.header"/>
+        </text>
+      </header>
+      <template>
+        <text>
+          <xpath function="case_name"/>
+        </text>
+      </template>
+    </field>
+  </detail>
+  <detail id="m0_case_long">
+    <title>
+      <text>
+        <locale id="m0.case_long.title"/>
+      </text>
+    </title>
+    <field sort="default">
+      <header>
+        <text>
+          <locale id="m0.case_long.case_name_1.header"/>
+        </text>
+      </header>
+      <template>
+        <text>
+          <xpath function="case_name"/>
+        </text>
+      </template>
+    </field>
+  </detail>
+  <detail id="m1_case_short">
+    <title>
+      <text>
+        <locale id="m1.case_short.title"/>
+      </text>
+    </title>
+    <field sort="default">
+      <header>
+        <text>
+          <locale id="m1.case_short.case_name_1.header"/>
+        </text>
+      </header>
+      <template>
+        <text>
+          <xpath function="case_name"/>
+        </text>
+      </template>
+    </field>
+    <action>
+      <text>
+        <locale id="case_list_form.m1"/>
+      </text>
+      <stack>
+        <create>
+          <command>m0-f1</command>
+          <datum id="parent_id" value="instance('commcaresession')/session/data/parent_id"/>
+        </create>
+      </stack>
+    </action>
+  </detail>
+  <detail id="m1_case_long">
+    <title>
+      <text>
+        <locale id="m1.case_long.title"/>
+      </text>
+    </title>
+    <field sort="default">
+      <header>
+        <text>
+          <locale id="m1.case_long.case_name_1.header"/>
+        </text>
+      </header>
+      <template>
+        <text>
+          <xpath function="case_name"/>
+        </text>
+      </template>
+    </field>
+  </detail>
+  <detail id="m2_case_short">
+    <title>
+      <text>
+        <locale id="m2.case_short.title"/>
+      </text>
+    </title>
+    <field sort="default">
+      <header>
+        <text>
+          <locale id="m2.case_short.case_name_1.header"/>
+        </text>
+      </header>
+      <template>
+        <text>
+          <xpath function="case_name"/>
+        </text>
+      </template>
+    </field>
+    <action>
+      <text>
+        <locale id="case_list_form.m2"/>
+      </text>
+      <stack>
+        <create>
+          <command>m0-f0</command>
+        </create>
+      </stack>
+    </action>
+  </detail>
+  <detail id="m2_case_long">
+    <title>
+      <text>
+        <locale id="m2.case_long.title"/>
+      </text>
+    </title>
+    <field sort="default">
+      <header>
+        <text>
+          <locale id="m2.case_long.case_name_1.header"/>
+        </text>
+      </header>
+      <template>
+        <text>
+          <xpath function="case_name"/>
+        </text>
+      </template>
+    </field>
+  </detail>
+  <entry>
+    <form>http://openrosa.org/formdesigner/4A9D4D11-7914-4419-91B8-2A00B789679F</form>
+    <command id="m0-f0">
+      <text>
+        <locale id="forms.m0f0"/>
+      </text>
+    </command>
+    <instance id="casedb" src="jr://instance/casedb"/>
+    <instance id="commcaresession" src="jr://instance/session"/>
+    <session>
+        <datum id="case_id" function="uuid()"/>
+        <datum id="subcase_id" function="uuid()"/>
+    </session>
+    <stack>
+        <create if="count(instance('casedb')/casedb/case[@case_id=instance('commcaresession')/session/data/subcase_id]) &gt; 0">
+            <command>m1</command>
+            <datum id="parent_id" value="instance('commcaresession')/session/data/case_id"/>
+            <datum id="case_id" value="instance('commcaresession')/session/data/subcase_id"/>
+        </create>
+        <create if="count(instance('casedb')/casedb/case[@case_id=instance('commcaresession')/session/data/subcase_id]) = 0">
+            <command>m1</command>
+        </create>
+    </stack>
+  </entry>
+  <entry>
+    <form>http://openrosa.org/formdesigner/C4D92842-5985-479E-B6FF-A3905CF79CE9</form>
+    <command id="m0-f1">
+      <text>
+        <locale id="forms.m0f1"/>
+      </text>
+    </command>
+    <instance id="casedb" src="jr://instance/casedb"/>
+    <session>
+      <datum id="case_id" nodeset="instance('casedb')/casedb/case[@case_type='bird'][@status='open']" value="./@case_id" detail-select="m0_case_short" detail-confirm="m0_case_long"/>
+      <datum id="subcase_id" function="uuid()"/>
+    </session>
+    <stack>
+        <create if="count(instance('casedb')/casedb/case[@case_id=instance('commcaresession')/session/data/subcase_id]) &gt; 0">
+            <command>m1</command>
+            <datum id="parent_id" value="instance('commcaresession')/session/data/case_id"/>
+            <datum id="case_id" value="instance('commcaresession')/session/data/subcase_id"/>
+        </create>
+        <create if="count(instance('casedb')/casedb/case[@case_id=instance('commcaresession')/session/data/subcase_id]) = 0">
+            <command>m1</command>
+        </create>
+    </stack>
+  </entry>
+  <entry>
+    <form>http://openrosa.org/formdesigner/5E2E4587-60DA-4763-9FBB-C649F78E3C59</form>
+    <command id="m1-f0">
+      <text>
+        <locale id="forms.m1f0"/>
+      </text>
+    </command>
+    <instance id="casedb" src="jr://instance/casedb"/>
+    <instance id="commcaresession" src="jr://instance/session"/>
+    <session>
+      <datum id="parent_id" nodeset="instance('casedb')/casedb/case[@case_type='bird'][@status='open']" value="./@case_id" detail-select="m0_case_short"/>
+      <datum id="case_id" nodeset="instance('casedb')/casedb/case[@case_type='chick'][@status='open'][index/parent=instance('commcaresession')/session/data/parent_id]" value="./@case_id" detail-select="m1_case_short" detail-confirm="m1_case_long"/>
+    </session>
+  </entry>
+  <entry>
+    <form>http://openrosa.org/formdesigner/8561489A-0539-4C0A-99DA-A74C87659BE3</form>
+    <command id="m2-f0">
+      <text>
+        <locale id="forms.m2f0"/>
+      </text>
+    </command>
+    <instance id="casedb" src="jr://instance/casedb"/>
+    <instance id="commcaresession" src="jr://instance/session"/>
+    <session>
+      <datum id="parent_id" nodeset="instance('casedb')/casedb/case[@case_type='bird'][@status='open']" value="./@case_id" detail-select="m0_case_short"/>
+      <datum id="case_id" nodeset="instance('casedb')/casedb/case[@case_type='chick'][@status='open'][index/parent=instance('commcaresession')/session/data/parent_id]" value="./@case_id" detail-select="m2_case_short" detail-confirm="m2_case_long"/>
+    </session>
+  </entry>
+  <menu id="m0">
+    <text>
+      <locale id="modules.m0"/>
+    </text>
+    <command id="m0-f0"/>
+    <command id="m0-f1"/>
+  </menu>
+  <menu id="m1">
+    <text>
+      <locale id="modules.m1"/>
+    </text>
+    <command id="m1-f0"/>
+  </menu>
+  <menu id="m2">
+    <text>
+      <locale id="modules.m2"/>
+    </text>
+    <command id="m2-f0"/>
+  </menu>
+</suite>

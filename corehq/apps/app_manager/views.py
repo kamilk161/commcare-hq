@@ -762,12 +762,20 @@ def get_module_view_context_and_template(app, module):
 
     def case_list_form_options(case_type):
         forms = [form for form in module.get_forms() if form.is_registration_form(case_type)]
-        options = OrderedDict()
+        options = []
         if forms:
-            options['disabled'] = _('Disabled')
-            options.update({f.unique_id: trans(f.name, app.langs) for f in forms})
+            options.extend((f.unique_id, trans(f.name, app.langs)) for f in forms)
 
-        return options
+        if isinstance(module, Module) and module.parent_select.active:
+            parent_module = app.get_module_by_unique_id(module.parent_select.module_id)
+            forms = [form for form in parent_module.get_forms() if form.is_registration_form(case_type)]
+            module_prefix = '{}: {{}}'.format(trans(parent_module.name, app.langs))
+            options.extend((f.unique_id, module_prefix.format(trans(f.name, app.langs))) for f in forms)
+
+        if options:
+            options.insert(0, ('disabled', _('Disabled')))
+
+        return OrderedDict(options)
 
     ensure_unique_ids()
     if isinstance(module, CareplanModule):
