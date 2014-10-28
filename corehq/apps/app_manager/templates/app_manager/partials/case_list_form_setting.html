@@ -1,0 +1,35 @@
+{% load xforms_extras %}
+{% load hq_shared_tags %}
+{% load i18n %}
+{% if app.application_version == '2.0' and case_list_form_options %}
+    <div class="control-group">
+        <label class="control-label">
+            {% trans "Registration Form Accessible from Case List" %}
+            <span class="hq-help-template"
+                  data-title="{% trans "Registration Form Accessible from Case List" %}"
+                  data-content="{% blocktrans %}This option can minimize duplicate case registrations by requiring
+                  mobile users to search the case list (and confirm that it doesn’t exist already) before they
+                  can enter the registration form to create a new case.{% endblocktrans %}"
+            ></span>
+        </label>
+        <div id="case-list-form" class="controls">
+            {% if edit %}
+                 <select data-bind="
+                    optstr: case_list_form_optstr,
+                    value: case_list_form_proxy"></select>
+                <input type="hidden" name="case_list_form_id" data-bind="value: case_list_form" />
+                <span id="case_list_form-label">
+                    with label: {% input_trans module.case_list_form.label langs input_name='case_list_form_label' %}
+                </span>
+            {% else %}
+                <span data-bind="text: case_list_form_display"></span>
+                {% if module.case_list_form.form_id %}
+                    with label: {{ module.case_list_form.label|trans:langs }}
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div id="case_list_media">
+        {% include "app_manager/partials/nav_menu_media.html" with item=module.case_list_form qualifier='case_list_form_'  ICON_LABEL="Registration Form Icon" AUDIO_LABEL="Registration Form Audio" %}
+    </div>
+{% endif %}
