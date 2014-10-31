@@ -1099,7 +1099,7 @@ class XForm(WrappedNode):
         else:
             extra_updates = {}
             case_block = CaseBlock(self)
-
+            module = form.get_module()
             if form.requires != 'none':
                 def make_delegation_stub_case_block():
                     path = 'cc_delegation_stub/'
@@ -1124,17 +1124,23 @@ class XForm(WrappedNode):
                     outer_block.append(delegation_case_block.elem)
                     return outer_block
 
-                if form.get_module().task_list.show:
+                if module.task_list.show:
                     delegation_case_block = make_delegation_stub_case_block()
 
             if 'open_case' in actions:
                 open_case_action = actions['open_case']
+                case_id = 'uuid()'
+                if module.case_list_form.form_id == form.get_unique_id() and \
+                        module.module_type == 'basic' and not module.parent_select.active:
+                    case_id = session_var('case_id')
+
                 case_block.add_create_block(
                     relevance=self.action_relevance(open_case_action.condition),
                     case_name=open_case_action.name_path,
                     case_type=form.get_case_type(),
                     autoset_owner_id=autoset_owner_id_for_open_case(actions),
                     has_case_sharing=form.get_app().case_sharing,
+                    case_id=case_id
                 )
                 if 'external_id' in actions['open_case'] and actions['open_case'].external_id:
                     extra_updates['external_id'] = actions['open_case'].external_id
