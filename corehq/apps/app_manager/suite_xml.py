@@ -431,12 +431,8 @@ class Detail(IdNode):
 
     title = NodeField('title/text', Text)
     fields = NodeListField('field', Field)
-<<<<<<< HEAD
     action = NodeField('action', Action)
-
-=======
     details = NodeListField('detail', "self")
->>>>>>> origin/case-detail-tabs
     _variables = NodeField('variables', DetailVariableList)
 
     def _init_variables(self):
