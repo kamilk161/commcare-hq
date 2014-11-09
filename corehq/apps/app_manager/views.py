@@ -992,6 +992,31 @@ def view_generic(req, domain, app_id=None, module_id=None, form_id=None, is_user
         'copy_app_form': copy_app_form if copy_app_form is not None else CopyApplicationForm(app_id)
     })
 
+    from corehq.apps.hqmedia.controller import MultimediaIconUploadController
+    from corehq.apps.hqmedia.views import (
+        ProcessJavaIconFileUploadView,
+        ProcessAndroidIconFileUploadView,
+    )
+    context.update({
+        "sessionid": req.COOKIES.get('sessionid'),
+        'uploaders': [
+            MultimediaIconUploadController(
+                "hq_logo_java",
+                reverse(
+                    ProcessJavaIconFileUploadView.name,
+                    args=[domain, app_id],
+                )
+            ),
+            MultimediaIconUploadController(
+                "hq_logo_android",
+                reverse(
+                    ProcessAndroidIconFileUploadView.name,
+                    args=[domain, app_id],
+                )
+            ),
+        ],
+    })
+
     response = render(req, template, context)
     response.set_cookie('lang', _encode_if_unicode(context['lang']))
     return response
