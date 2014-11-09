@@ -12,7 +12,6 @@ class Command(ElasticReindexer):
     pillow_class = ReportXFormPillow
     file_prefix = "ptop_fast_reindex_Report"
 
-
     def full_couch_view_iter(self):
         view_kwargs = {}
         dynamic_domains = getattr(settings, 'ES_XFORM_FULL_INDEX_DOMAINS', [])
@@ -22,24 +21,25 @@ class Command(ElasticReindexer):
             view_kwargs['endkey'] = [domain, {}]
 
             view_kwargs.update(self.get_extra_view_kwargs())
-            view_chunk = self.db.view(
-                self.view_name,
-                reduce=False,
-                limit=self.chunk_size * self.chunk_size,
-                skip=start_seq,
-                **view_kwargs
-            )
+
+            def view(skip):
+                self.log('Fetching rows {}-{} from couch'
+                         .format(skip, skip + self.chunk_size - 1))
+                return self.db.view(
+                    self.view_name,
+                    reduce=False,
+                    limit=self.chunk_size,
+                    skip=skip,
+                    **view_kwargs
+                )
+
+            view_chunk = view(start_seq)
 
             while len(view_chunk) > 0:
                 for item in view_chunk:
                     yield item
-                start_seq += self.chunk_size * self.chunk_size
-                view_chunk = self.db.view(self.view_name,
-                    reduce=False,
-                    limit=self.chunk_size * self.chunk_size,
-                    skip=start_seq,
-                    **view_kwargs
-                )
+                start_seq += self.chunk_size
+                view_chunk = view(start_seq)
 
     def custom_filter(self, view_row):
         """
@@ -53,6 +53,3 @@ class Command(ElasticReindexer):
             return view_row['key'] != 'http://code.javarosa.org/devicereport'
         else:
             return True
-
-
-

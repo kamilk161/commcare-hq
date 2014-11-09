@@ -5,16 +5,15 @@ import sys
 
 from django.core.management.base import NoArgsCommand
 import simplejson
+from corehq.util.couch_helpers import paginate_view
 from pillowtop.couchdb import CachedCouchDB
 
-CHUNK_SIZE = 500
+CHUNK_SIZE = 2000
 POOL_SIZE = 15
 
 MAX_TRIES = 10
 RETRY_DELAY = 60
 RETRY_TIME_DELAY_FACTOR = 15
-
-
 
 
 class PtopReindexer(NoArgsCommand):
@@ -54,18 +53,22 @@ class PtopReindexer(NoArgsCommand):
                     help='Previous run input file prefix',),
     )
 
-
     doc_class = None
     view_name = None
     couch_key = None
     pillow_class = None  # the pillow where the main indexing logic is
-    indexing_pillow_class = None  # the pillow that points to the index you want to index. By default this == self.pillow_class
+    # the pillow that points to the index you want to index.
+    # By default this == self.pillow_class
+    indexing_pillow_class = None
     file_prefix = "ptop_fast_reindex_"
 
     def __init__(self):
         super(PtopReindexer, self).__init__()
         if not getattr(self, "indexing_pillow_class", None):
             self.indexing_pillow_class = self.pillow_class
+
+    def log(self, message):
+        print '[{}] {}'.format(self.__module__.split('.')[-1], message)
 
     def custom_filter(self, view_row):
         """
@@ -90,7 +93,6 @@ class PtopReindexer(NoArgsCommand):
         self._seq_prefix = prefix
 
     def get_seq_filename(self):
-        #print "Run file prefix: ptop_fast_reindex_%s_%s" % (self.doc_class.__name__, datestring)
         seq_filename = "%s%s_%s_seq.txt" % (self.file_prefix, self.pillow_class.__name__, self.get_seq_prefix())
         return seq_filename
 
@@ -99,7 +101,6 @@ class PtopReindexer(NoArgsCommand):
         return view_dump_filename
 
     def full_couch_view_iter(self):
-        start_seq = 0
         if hasattr(self.pillow, 'include_docs_when_preindexing'):
             include_docs = self.pillow.include_docs_when_preindexing
         else:
@@ -109,24 +110,28 @@ class PtopReindexer(NoArgsCommand):
             view_kwargs["key"] = self.couch_key
 
         view_kwargs.update(self.get_extra_view_kwargs())
-        view_chunk = self.db.view(
+
+        class PaginateViewLogHandler:
+            @staticmethod
+            def view_starting(db, view_name, kwargs, total_emitted):
+                self.log('Fetching rows {}-{} from couch'.format(
+                    total_emitted,
+                    total_emitted + kwargs['limit'] - 1)
+                )
+                self.log('{}, {}'.format(kwargs.get('startkey'), kwargs.get('startkey_docid')))
+
+            @staticmethod
+            def view_ending(db, view_name, kwargs, total_emitted, time):
+                self.log('View call took {}'.format(time))
+
+        return paginate_view(
+            self.db,
             self.view_name,
+            chunk_size=self.chunk_size,
+            log_handler=PaginateViewLogHandler,
             reduce=False,
-            limit=self.chunk_size * self.chunk_size,
-            skip=start_seq,
             **view_kwargs
         )
-
-        while len(view_chunk) > 0:
-            for item in view_chunk:
-                yield item
-            start_seq += self.chunk_size * self.chunk_size
-            view_chunk = self.db.view(self.view_name,
-                reduce=False,
-                limit=self.chunk_size * self.chunk_size,
-                skip=start_seq,
-                **view_kwargs
-            )
 
     def load_from_view(self):
         """
@@ -142,22 +147,26 @@ class PtopReindexer(NoArgsCommand):
         current_db_seq = self.pillow.couch_db.info()['update_seq']
         self.pillow.set_checkpoint({'seq': current_db_seq})
 
-        #Write sequence file to disk
-        with open(self.get_seq_filename(), 'w') as fout:
+        # Write sequence file to disk
+        seq_filename = self.get_seq_filename()
+        self.log('Writing sequence file to disk: {}'.format(seq_filename))
+        with open(seq_filename, 'w') as fout:
             fout.write(str(current_db_seq))
 
-        #load entire view to disk
-        print "Getting full view list: %s" % datetime.utcnow().isoformat()
-        with open(self.get_dump_filename(), 'w') as fout:
+        # Load entire view to disk
+        dump_filename = self.get_dump_filename()
+        self.log('Writing dump file to disk: {}, starting at {}'.format(
+            dump_filename, datetime.utcnow().isoformat()))
+        with open(dump_filename, 'w') as fout:
             for row in self.full_couch_view_iter():
                 fout.write('{}\n'.format(simplejson.dumps(row)))
-        print "View and sequence written to disk: %s" % datetime.utcnow().isoformat()
+        self.log("View and sequence written to disk: %s" % datetime.utcnow().isoformat())
 
     def load_seq_from_disk(self):
         """
         Main load of view data from disk.
         """
-        print "Loading from disk: %s" % datetime.utcnow().isoformat()
+        self.log("Loading from disk: %s" % datetime.utcnow().isoformat())
         with open(self.get_seq_filename(), 'r') as fin:
             current_db_seq = fin.read()
             self.pillow.set_checkpoint({'seq': current_db_seq})
@@ -177,7 +186,6 @@ class PtopReindexer(NoArgsCommand):
         self.chunk_size = options.get('chunk_size', CHUNK_SIZE)
         self.start_num = options.get('seq', 0)
 
-
     def handle(self, *args, **options):
         if not options['noinput']:
             confirm = raw_input("""
@@ -190,7 +198,7 @@ class PtopReindexer(NoArgsCommand):
         Type 'yes' to continue, or 'no' to cancel: """ % self.indexing_pillow_class.__name__)
 
             if confirm != 'yes':
-                print "\tReset cancelled."
+                self.log("\tReset cancelled.")
                 return
 
             confirm_ptop = raw_input("""\tAre you sure you disabled run_ptop? """)
@@ -204,20 +212,20 @@ class PtopReindexer(NoArgsCommand):
         self._bootstrap(options)
         start = datetime.utcnow()
 
-        print "using chunk size %s" % self.chunk_size
+        self.log("using chunk size %s" % self.chunk_size)
 
         if not self.resume:
             self.pre_load_hook()
             self.load_from_view()
         else:
             if self.runfile is None:
-                print "\tNeed a previous runfile prefix to access older snapshot of view. eg. ptop_fast_reindex_%s_yyyy-mm-dd-HHMM" % self.pillow_class.__name__
+                self.log("\tNeed a previous runfile prefix to access older snapshot of view. eg. ptop_fast_reindex_%s_yyyy-mm-dd-HHMM" % self.pillow_class.__name__)
                 sys.exit()
-            print "Starting fast tracked reindexing from view position %d" % self.start_num
+            self.log("Starting fast tracked reindexing from view position %d" % self.start_num)
             runparts = self.runfile.split('_')
-            print runparts
+            self.log(runparts)
             if len(runparts) != 5 or not self.runfile.startswith('ptop_fast_reindex'):
-                print "\tError, runpart name must be in format ptop_fast_reindex_%s_yyyy-mm-dd-HHMM"
+                self.log("\tError, runpart name must be in format ptop_fast_reindex_%s_yyyy-mm-dd-HHMM")
                 sys.exit()
 
             self.set_seq_prefix(runparts[-1])
@@ -226,15 +234,15 @@ class PtopReindexer(NoArgsCommand):
         self.post_load_hook()
 
         if self.bulk:
-            print "Preparing Bulk Payload"
+            self.log("Preparing Bulk Payload")
             self.load_bulk()
         else:
-            print "Loading traditional method"
+            self.log("Loading traditional method")
             self.load_traditional()
         end = datetime.utcnow()
 
         self.pre_complete_hook()
-        print "done in %s seconds" % (end - start).seconds
+        self.log("done in %s seconds" % (end - start).seconds)
 
     def process_row(self, row, count):
         if count >= self.start_num:
@@ -247,10 +255,10 @@ class PtopReindexer(NoArgsCommand):
                     break
                 except Exception, ex:
                     retries += 1
-                    print "\tException sending single item %s, %s, retrying..." % (row['id'], ex)
+                    self.log("\tException sending single item %s, %s, retrying..." % (row['id'], ex))
                     time.sleep(RETRY_DELAY + retries * RETRY_TIME_DELAY_FACTOR)
         else:
-            print "\tskipping... %d < %d" % (count, self.start_num)
+            self.log("\tskipping... %d < %d" % (count, self.start_num))
 
     def load_traditional(self):
         """
@@ -258,7 +266,7 @@ class PtopReindexer(NoArgsCommand):
         :return:
         """
         for ix, item in enumerate(self.full_couch_view_iter()):
-            print "\tProcessing item %s (%d)" % (item['id'], ix)
+            self.log("\tProcessing item %s (%d)" % (item['id'], ix))
             self.process_row(item, ix)
 
     def load_bulk(self):
@@ -294,15 +302,17 @@ class PtopReindexer(NoArgsCommand):
         bulk_start = datetime.utcnow()
         while retries < MAX_TRIES:
             try:
+                self.log('Sending chunk to ES')
                 self.pillow.process_bulk(filtered_slice)
                 break
             except Exception as ex:
                 retries += 1
                 retry_time = (datetime.utcnow() - bulk_start).seconds + retries * RETRY_TIME_DELAY_FACTOR
-                print "\t%s: Exception sending slice %d:%d, %s, retrying in %s seconds" % (datetime.now().isoformat(), start, end, ex, retry_time)
+                self.log("\t%s: Exception sending slice %d:%d, %s, retrying in %s seconds" % (datetime.now().isoformat(), start, end, ex, retry_time))
                 time.sleep(retry_time)
-                print "\t%s: Retrying again %d:%d..." % (datetime.now().isoformat(), start, end)
-                bulk_start = datetime.utcnow() #reset timestamp when looping again
+                self.log("\t%s: Retrying again %d:%d..." % (datetime.now().isoformat(), start, end))
+                # reset timestamp when looping again
+                bulk_start = datetime.utcnow()
 
     def pre_load_hook(self):
         pass
@@ -320,18 +330,18 @@ class ElasticReindexer(PtopReindexer):
 
     def pre_load_hook(self):
         if self.own_index_exists:
-            #delete the existing index.
-            print "Deleting index"
+            # delete the existing index.
+            self.log("Deleting index")
             self.indexing_pillow.delete_index()
-            print "Recreating index"
+            self.log("Recreating index")
             self.indexing_pillow.create_index()
             self.indexing_pillow.seen_types = {}
 
     def post_load_hook(self):
-        #configure index to indexing mode
+        # configure index to indexing mode
         self.indexing_pillow.set_index_reindex_settings()
 
     def pre_complete_hook(self):
-        print "setting index settings to normal search configuration and refreshing index"
+        self.log("setting index settings to normal search configuration and refreshing index")
         self.indexing_pillow.set_index_normal_settings()
         self.indexing_pillow.refresh_index()
