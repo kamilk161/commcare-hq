@@ -316,6 +316,7 @@ var DetailScreenConfig = (function () {
             this.original.late_flag = _.isNumber(this.original.late_flag) ? this.original.late_flag : 30;
             this.original.filter_xpath = this.original.filter_xpath || "";
             this.original.calc_xpath = this.original.calc_xpath || ".";
+            this.original.graph_configuration = this.original.graph_configuration || {};
             var icon = (CC_DETAIL_SCREEN.isAttachmentProperty(this.original.field)
                            ? COMMCAREHQ.icons.PAPERCLIP : null);
 
@@ -357,6 +358,18 @@ var DetailScreenConfig = (function () {
                 };
                 that.enum_extra = uiElement.key_value_mapping(o);
             }());
+
+            this.graph_extra = new uiElement.GraphConfiguration({
+                childCaseTypes: this.screen.childCaseTypes,
+                lang: this.lang,
+                langs: this.screen.langs,
+                name: this.header.val()
+            }, this.original.graph_configuration);
+            this.header.on("change", function(){
+                // The graph should always have the same name as the Column
+                that.graph_extra.setName(that.header.val());
+            });
+
             this.late_flag_extra = uiElement.input().val(this.original.late_flag.toString());
             this.late_flag_extra.ui.find('input').css('width', 'auto');
             this.late_flag_extra.ui.prepend(
@@ -388,6 +401,7 @@ var DetailScreenConfig = (function () {
                 'header',
                 'format',
                 'enum_extra',
+                'graph_extra',
                 'late_flag_extra',
                 'filter_xpath_extra',
                 'calc_xpath_extra',
@@ -406,6 +420,7 @@ var DetailScreenConfig = (function () {
                 // Prevent this from running on page load before init
                 if (that.format.ui.parent().length > 0) {
                     that.enum_extra.ui.detach();
+                    that.graph_extra.ui.detach();
                     that.late_flag_extra.ui.detach();
                     that.filter_xpath_extra.ui.detach();
                     that.calc_xpath_extra.ui.detach();
@@ -413,6 +428,11 @@ var DetailScreenConfig = (function () {
 
                     if (this.val() === "enum" || this.val() === "enum-image") {
                         that.format.ui.parent().append(that.enum_extra.ui);
+                    } else if (this.val() === "graph") {
+                        // Replace format select with edit button
+                        var parent = that.format.ui.parent();
+                        parent.empty();
+                        parent.append(that.graph_extra.ui);
                     } else if (this.val() === 'late-flag') {
                         that.format.ui.parent().append(that.late_flag_extra.ui);
                         var input = that.late_flag_extra.ui.find('input');
@@ -463,7 +483,9 @@ var DetailScreenConfig = (function () {
                 column.field = this.field.val();
                 column.header[this.lang] = this.header.val();
                 column.format = this.format.val();
-                column['enum'] = this.enum_extra.getItems();
+                column.enum = this.enum_extra.getItems();
+                column.graph_configuration =
+                        this.format.val() == "graph" ? this.graph_extra.val() : null;
                 column.late_flag = parseInt(this.late_flag_extra.val(), 10);
                 column.time_ago_interval = parseFloat(this.time_ago_extra.val());
                 column.filter_xpath = this.filter_xpath_extra.val();
@@ -515,6 +537,7 @@ var DetailScreenConfig = (function () {
             this.lang = options.lang;
             this.langs = options.langs || [];
             this.properties = options.properties;
+            this.childCaseTypes = options.childCaseTypes;
             // The column key is used to retreive the columns from the spec and
             // as the name of the key in the data object that is sent to the
             // server on save.
@@ -538,6 +561,7 @@ var DetailScreenConfig = (function () {
                 column.header.setEdit(that.edit);
                 column.format.setEdit(that.edit);
                 column.enum_extra.setEdit(that.edit);
+                column.graph_extra.edit(that.edit);
                 column.late_flag_extra.setEdit(that.edit);
                 column.filter_xpath_extra.setEdit(that.edit);
                 column.calc_xpath_extra.setEdit(that.edit);
@@ -547,6 +571,7 @@ var DetailScreenConfig = (function () {
 
                 column.field.on('change', function () {
                     column.header.val(getPropertyTitle(this.val()));
+                    column.header.fire("change");
                     if (this.val() && !DetailScreenConfig.field_val_re.test(this.val())) {
                         column.format_warning.show().parent().addClass('error');
                     } else {
@@ -758,6 +783,11 @@ var DetailScreenConfig = (function () {
                             $('<li class="add-calculation-item"><a>Calculation</a></li>')
                         );
                     }
+                    if (this.config.graphEnabled){
+                        buttonDropdownItems.push(
+                            $('<li class="add-graph-item"><a>Graph</a></li>')
+                        );
+                    }
                     $addButton = $(
                         '<div class="btn-group">' +
                             '<button class="btn add-property-item">Add Property</button>' +
@@ -795,12 +825,16 @@ var DetailScreenConfig = (function () {
                         if (redrawOnAddItem) {
                             that.render();
                         }
+                        return col;
                     };
                     $(".add-property-item", $addButton).click(function () {
                         addItem({hasAutocomplete: true});
                     });
                     $(".add-calculation-item", $addButton).click(function () {
                         addItem({hasAutocomplete: false, format: "calculate"});
+                    });
+                    $(".add-graph-item", $addButton).click(function() {
+                        addItem({hasAutocomplete: false, format: "graph"});
                     });
 
                     if (! _.isEmpty(this.columns)) {
@@ -891,6 +925,7 @@ var DetailScreenConfig = (function () {
             }
             this.edit = spec.edit;
             this.saveUrl = spec.saveUrl;
+            this.graphEnabled = spec.graphEnabled;
             this.calculationEnabled = spec.calculationEnabled;
 
             var filter_xpath = spec.state.short.filter;
@@ -917,6 +952,7 @@ var DetailScreenConfig = (function () {
                         saveUrl: that.saveUrl,
                         $location: $location,
                         columnKey: columnType,
+                        childCaseTypes: spec.childCaseTypes,
                         containsSortConfiguration: columnType == "short",
                         containsParentConfiguration: columnType == "short",
                         containsFilterConfiguration: columnType == "short"

@@ -277,6 +277,24 @@ class SuiteTest(SimpleTestCase, TestFileMixin):
 
         self.assertXmlPartialEqual(self.get_xml('advanced_module_parent'), app.create_suite(), "./entry[1]")
 
+    def test_graphing(self):
+        self._test_generic_suite('app_graphing', 'suite-graphing')
+
+    def test_case_list_registration_form(self):
+        """
+        Ensure form filter gets added correctly and appropriate instances get added to the entry.
+        """
+        app = Application.wrap(self.get_json('app'))
+        module = app.get_module(0)
+        form = module.get_form(0)
+        module.case_list_form.form_id = form.get_unique_id()
+        module.case_list_form.media_image = 'jr://file/commcare/image/new_case.png'
+        module.case_list_form.media_audio = 'jr://file/commcare/audio/new_case.mp3'
+        module.case_list_form.label = {
+            'en': 'New Case'
+        }
+        self.assertXmlEqual(self.get_xml('case-list-form-suite'), app.create_suite())
+
 
 class RegexTest(SimpleTestCase):
 

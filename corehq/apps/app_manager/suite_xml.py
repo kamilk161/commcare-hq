@@ -102,6 +102,51 @@ class Text(XmlObject):
     locale_id = StringField('locale/@id')
 
 
+class ConfigurationItem(Text):
+    ROOT_NAME = "text"
+    id = StringField("@id")
+
+
+class ConfigurationGroup(XmlObject):
+    ROOT_NAME = 'configuration'
+    configs = NodeListField('text', ConfigurationItem)
+
+
+class Series(OrderedXmlObject):
+    ORDER = (
+        "configuration",
+        "x_function",
+        "y_function",
+        "radius_function",
+    )
+    ROOT_NAME = 'series'
+
+    nodeset = StringField('@nodeset')
+    configuration = NodeField('configuration', ConfigurationGroup)
+    x_function = StringField('x/@function')
+    y_function = StringField('y/@function')
+    radius_function = StringField("radius/@function")
+
+
+class Annotation(OrderedXmlObject):
+    ORDER = ("x", "y", "text")
+    ROOT_NAME = 'annotation'
+
+    # TODO: Specify the xpath without specifying "text" for the child (we want the Text class to specify the tag)
+    x = NodeField('x/text', Text)
+    y = NodeField('y/text', Text)
+    text = NodeField('text', Text)
+
+
+class Graph(XmlObject):
+    ROOT_NAME = 'graph'
+
+    type = StringField("@type", choices=["xy", "bubble"])
+    series = NodeListField('series', Series)
+    configuration = NodeField('configuration', ConfigurationGroup)
+    annotations = NodeListField('annotation', Annotation)
+
+
 class AbstractResource(OrderedXmlObject):
     ORDER = ('id', 'version', 'local', 'remote')
     LOCATION_TEMPLATE = 'resource/location[@authority="%s"]'
@@ -314,6 +359,12 @@ class Template(AbstractTemplate):
     ROOT_NAME = 'template'
 
 
+class GraphTemplate(Template):
+    # TODO: Is there a way to specify a default/static value for form?
+    form = StringField('@form', choices=['graph'])
+    graph = NodeField('graph', Graph)
+
+
 class Header(AbstractTemplate):
     ROOT_NAME = 'header'
 
@@ -334,6 +385,13 @@ class Field(OrderedXmlObject):
     header = NodeField('header', Header)
     template = NodeField('template', Template)
     sort_node = NodeField('sort', Sort)
+
+
+class Action(OrderedXmlObject, DisplayNode):
+    ROOT_NAME = 'action'
+    ORDER = ('display', 'stack')
+
+    stack = NodeField('stack', Stack)
 
 
 class DetailVariable(XmlObject):
@@ -373,6 +431,8 @@ class Detail(IdNode):
 
     title = NodeField('title/text', Text)
     fields = NodeListField('field', Field)
+    action = NodeField('action', Action)
+
     _variables = NodeField('variables', DetailVariableList)
 
     def _init_variables(self):
@@ -395,8 +455,11 @@ class Detail(IdNode):
             for variable in self.variables:
                 result.add(variable.function)
         for field in self.fields:
-            result.add(field.header.text.xpath_function)
-            result.add(field.template.text.xpath_function)
+            try:
+                result.add(field.header.text.xpath_function)
+                result.add(field.template.text.xpath_function)
+            except AttributeError:
+                pass  # Its a Graph detail
         result.discard(None)
         return result
 
@@ -794,6 +857,19 @@ class SuiteGenerator(SuiteGeneratorBase):
                                 ).fields
                                 d.fields.extend(fields)
 
+                            if module.module_type == 'basic' and not module.parent_select.active and \
+                                    module.case_list_form.form_id and detail_type.endswith('short'):
+                                # add form action to detail
+                                form = module.get_form_by_unique_id(module.case_list_form.form_id)
+                                d.action = Action(
+                                    locale_id=self.id_strings.case_list_form_locale(module),
+                                    media_image=module.case_list_form.media_image,
+                                    media_audio=module.case_list_form.media_audio,
+                                    stack=Stack())
+                                frame = CreateFrame()
+                                frame.add_command(self.id_strings.form_command(form))
+                                d.action.stack.add_frame(frame)
+
                             try:
                                 if not self.app.enable_multi_sort:
                                     d.fields[0].sort = 'default'
@@ -1106,6 +1182,20 @@ class SuiteGenerator(SuiteGeneratorBase):
             'case_autoload.{0}.case_missing'.format(mode),
         )
 
+    def configure_entry_as_case_list_form(self, module, form, entry):
+        entry.datums.append(SessionDatum(id='case_id', function='uuid()'))
+        entry.stack = Stack()
+        case_id = session_var('case_id')
+        case_count = CaseIDXPath(case_id).case().count()
+        frame_case_created = CreateFrame(if_clause='{} > 0'.format(case_count))
+        frame_case_created.add_command(self.id_strings.menu(module))
+        frame_case_created.add_datum(StackDatum(id='case_id', value=case_id))
+        entry.stack.add_frame(frame_case_created)
+
+        frame_case_not_created = CreateFrame(if_clause='{} = 0'.format(case_count))
+        frame_case_not_created.add_command(self.id_strings.menu(module))
+        entry.stack.add_frame(frame_case_not_created)
+
     def configure_entry_module_form(self, module, e, form=None, use_filter=True, **kwargs):
         def case_sharing_requires_assertion(form):
             actions = form.active_actions()
@@ -1119,6 +1209,8 @@ class SuiteGenerator(SuiteGeneratorBase):
 
         if not form or form.requires == 'case':
             self.configure_entry_module(module, e, use_filter=True)
+        elif form and module.case_list_form.form_id and module.case_list_form.form_id == form.get_unique_id():
+            self.configure_entry_as_case_list_form(module, form, e)
 
         if form and self.app.case_sharing and case_sharing_requires_assertion(form):
             self.add_case_sharing_assertion(e)
