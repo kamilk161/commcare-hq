@@ -514,9 +514,13 @@ class Domain(Document, SnapshotMixin):
                 else:
                     notify_exception(None, '%r is not a valid domain name' % name)
                     return None
-        cache_key = _domain_cache_key(name)
+
         MISSING = object()
-        res = cache.get(cache_key, MISSING)
+        res = MISSING
+        if not strict:
+            cache_key = _domain_cache_key(name)
+            res = cache.get(cache_key, MISSING)
+
         if res != MISSING:
             return res
         else:
