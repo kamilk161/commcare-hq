@@ -1,4 +1,5 @@
 # encoding: utf-8
+import logging
 from south.v2 import DataMigration
 from django.conf import settings
 from dimagi.utils.couch.database import iter_docs
@@ -8,6 +9,8 @@ from corehq.apps.app_manager.const import APP_V1
 from corehq.apps.app_manager.detail_screen import get_column_xpath_generator
 from corehq.apps.app_manager.models import Application
 from corehq.apps.app_manager.xpath import dot_interpolate
+
+logger = logging.getLogger(__name__)
 
 
 class Migration(DataMigration):
@@ -21,25 +24,26 @@ class Migration(DataMigration):
 
             for app_doc in iter_docs(Application.get_db(), application_ids):
 
-                if app_doc["doc_type"] in [
-                    "Application", "Application-Deleted"
-                ]:
+                if app_doc["doc_type"] in ["Application", "Application-Deleted"]:
                     application = Application.wrap(app_doc)
+                    self.migrate_app(application)
 
-                    filter_combination_func = \
-                        self.combine_and_interpolate_V2_filters
-                    if application.application_version == APP_V1:
-                        filter_combination_func = \
-                            self.combine_and_interpolate_V1_filters
+    @classmethod
+    def migrate_app(cls, app):
+        filter_combination_func = cls.combine_and_interpolate_V2_filters
+        if app.application_version == APP_V1:
+            filter_combination_func = \
+                cls.combine_and_interpolate_V1_filters
 
-                    for module in application.get_modules():
-                        detail = module.case_details.short
-                        combined_filter_string = filter_combination_func(
-                            detail.get_columns(), application, module, detail
-                        )
-                        detail.filter = combined_filter_string
+        for module in app.get_modules():
+            detail = module.case_details.short
+            combined_filter_string = filter_combination_func(
+                detail.get_columns(), app, module, detail
+            )
+            detail.filter = combined_filter_string
 
-                    application.save()
+        app.save()
+        logger.info("Filter migration on app {id} complete.".format(id=app.id))
 
     @classmethod
     def combine_and_interpolate_V1_filters(cls, columns, app, module, detail):

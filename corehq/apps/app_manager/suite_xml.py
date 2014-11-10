@@ -102,6 +102,51 @@ class Text(XmlObject):
     locale_id = StringField('locale/@id')
 
 
+class ConfigurationItem(Text):
+    ROOT_NAME = "text"
+    id = StringField("@id")
+
+
+class ConfigurationGroup(XmlObject):
+    ROOT_NAME = 'configuration'
+    configs = NodeListField('text', ConfigurationItem)
+
+
+class Series(OrderedXmlObject):
+    ORDER = (
+        "configuration",
+        "x_function",
+        "y_function",
+        "radius_function",
+    )
+    ROOT_NAME = 'series'
+
+    nodeset = StringField('@nodeset')
+    configuration = NodeField('configuration', ConfigurationGroup)
+    x_function = StringField('x/@function')
+    y_function = StringField('y/@function')
+    radius_function = StringField("radius/@function")
+
+
+class Annotation(OrderedXmlObject):
+    ORDER = ("x", "y", "text")
+    ROOT_NAME = 'annotation'
+
+    # TODO: Specify the xpath without specifying "text" for the child (we want the Text class to specify the tag)
+    x = NodeField('x/text', Text)
+    y = NodeField('y/text', Text)
+    text = NodeField('text', Text)
+
+
+class Graph(XmlObject):
+    ROOT_NAME = 'graph'
+
+    type = StringField("@type", choices=["xy", "bubble"])
+    series = NodeListField('series', Series)
+    configuration = NodeField('configuration', ConfigurationGroup)
+    annotations = NodeListField('annotation', Annotation)
+
+
 class AbstractResource(OrderedXmlObject):
     ORDER = ('id', 'version', 'local', 'remote')
     LOCATION_TEMPLATE = 'resource/location[@authority="%s"]'
@@ -314,6 +359,12 @@ class Template(AbstractTemplate):
     ROOT_NAME = 'template'
 
 
+class GraphTemplate(Template):
+    # TODO: Is there a way to specify a default/static value for form?
+    form = StringField('@form', choices=['graph'])
+    graph = NodeField('graph', Graph)
+
+
 class Header(AbstractTemplate):
     ROOT_NAME = 'header'
 
@@ -382,7 +433,7 @@ class Detail(IdNode):
     title = NodeField('title/text', Text)
     fields = NodeListField('field', Field)
     action = NodeField('action', Action)
-
+    details = NodeListField('detail', "self")
     _variables = NodeField('variables', DetailVariableList)
 
     def _init_variables(self):
@@ -405,8 +456,11 @@ class Detail(IdNode):
             for variable in self.variables:
                 result.add(variable.function)
         for field in self.fields:
-            result.add(field.header.text.xpath_function)
-            result.add(field.template.text.xpath_function)
+            try:
+                result.add(field.header.text.xpath_function)
+                result.add(field.template.text.xpath_function)
+            except AttributeError:
+                pass  # Its a Graph detail
         result.discard(None)
         return result
 
@@ -788,47 +842,78 @@ class SuiteGenerator(SuiteGeneratorBase):
                         )
 
                         if detail_column_infos:
-                            d = Detail(
-                                id=self.id_strings.detail(module, detail_type),
-                                title=Text(locale_id=self.id_strings.detail_title_locale(module, detail_type))
-                            )
 
                             variables = list(self.detail_variables(module, detail, detail_column_infos))
-                            if variables:
-                                d.variables.extend(variables)
 
-                            for column_info in detail_column_infos:
-                                fields = get_column_generator(
-                                    self.app, module, detail,
-                                    detail_type=detail_type, *column_info
-                                ).fields
-                                d.fields.extend(fields)
+                            def build_detail(tabs, id, title, start, end):
+                                """
+                                Recursively builds the Detail object.
+                                (Details can contain other details for each of their tabs)
+                                """
+                                d = Detail(id=id, title=title)
+                                if variables:
+                                    d.variables.extend(variables)
+                                if tabs:
+                                    tab_spans = detail.get_tab_spans()
+                                    for tab in tabs:
+                                        sub_detail = build_detail(
+                                            [],
+                                            None,
+                                            Text(locale_id=self.id_strings.detail_tab_title_locale(module, detail_type, tab)),
+                                            tab_spans[tab.id][0],
+                                            tab_spans[tab.id][1]
+                                        )
+                                        if sub_detail:
+                                            d.details.append(sub_detail)
+                                    if len(d.details):
+                                        return d
+                                    else:
+                                        return None
+                                
+                                else:
+                                    # Base case (has no tabs)
+                                    for column_info in detail_column_infos[start:end]:
+                                        fields = get_column_generator(
+                                            self.app, module, detail,
+                                            detail_type=detail_type, *column_info
+                                        ).fields
+                                        d.fields.extend(fields)
 
-                            if module.module_type == 'basic' and not module.parent_select.active and \
-                                    module.case_list_form.form_id and detail_type.endswith('short'):
-                                # add form action to detail
-                                form = module.get_form_by_unique_id(module.case_list_form.form_id)
-                                d.action = Action(
-                                    display=Display(
-                                        text=Text(locale_id=self.id_strings.case_list_form_locale(module)),
-                                        media_image=module.case_list_form.media_image,
-                                        media_audio=module.case_list_form.media_audio,
-                                    ),
-                                    stack=Stack()
-                                )
-                                frame = CreateFrame()
-                                frame.add_command(self.id_strings.form_command(form))
-                                d.action.stack.add_frame(frame)
+                                    if module.module_type == 'basic' and not module.parent_select.active and \
+                                            module.case_list_form.form_id and detail_type.endswith('short'):
+                                        # add form action to detail
+                                        form = module.get_form_by_unique_id(module.case_list_form.form_id)
+                                        d.action = Action(
+                                            display=Display(
+                                                text=Text(locale_id=self.id_strings.case_list_form_locale(module)),
+                                                media_image=module.case_list_form.media_image,
+                                                media_audio=module.case_list_form.media_audio,
+                                            ),
+                                            stack=Stack()
+                                        )
+                                        frame = CreateFrame()
+                                        frame.add_command(self.id_strings.form_command(form))
+                                        d.action.stack.add_frame(frame)
 
-                            try:
-                                if not self.app.enable_multi_sort:
-                                    d.fields[0].sort = 'default'
-                            except IndexError:
-                                pass
-                            else:
-                                # only yield the Detail if it has Fields
+                                    try:
+                                        if not self.app.enable_multi_sort:
+                                            d.fields[0].sort = 'default'
+                                    except IndexError:
+                                        pass
+                                    else:
+                                        # only yield the Detail if it has Fields
+                                        return d
+
+                            d = build_detail(
+                                [t for t in detail.get_tabs()],
+                                self.id_strings.detail(module, detail_type),
+                                Text(locale_id=self.id_strings.detail_title_locale(module, detail_type)),
+                                0,
+                                len(detail_column_infos)
+                            )
+                            if d:
+                                #print d.serialize(pretty=True)
                                 r.append(d)
-
         return r
 
     def detail_variables(self, module, detail, detail_column_infos):

@@ -316,6 +316,12 @@ var DetailScreenConfig = (function () {
             this.original.late_flag = _.isNumber(this.original.late_flag) ? this.original.late_flag : 30;
             this.original.filter_xpath = this.original.filter_xpath || "";
             this.original.calc_xpath = this.original.calc_xpath || ".";
+            this.original.graph_configuration = this.original.graph_configuration || {};
+
+            // Tab attributes
+            this.original.isTab = this.original.isTab !== undefined ? this.original.isTab : false;
+            this.isTab = this.original.isTab;
+
             var icon = (CC_DETAIL_SCREEN.isAttachmentProperty(this.original.field)
                            ? COMMCAREHQ.icons.PAPERCLIP : null);
 
@@ -357,6 +363,18 @@ var DetailScreenConfig = (function () {
                 };
                 that.enum_extra = uiElement.key_value_mapping(o);
             }());
+
+            this.graph_extra = new uiElement.GraphConfiguration({
+                childCaseTypes: this.screen.childCaseTypes,
+                lang: this.lang,
+                langs: this.screen.langs,
+                name: this.header.val()
+            }, this.original.graph_configuration);
+            this.header.on("change", function(){
+                // The graph should always have the same name as the Column
+                that.graph_extra.setName(that.header.val());
+            });
+
             this.late_flag_extra = uiElement.input().val(this.original.late_flag.toString());
             this.late_flag_extra.ui.find('input').css('width', 'auto');
             this.late_flag_extra.ui.prepend(
@@ -388,6 +406,7 @@ var DetailScreenConfig = (function () {
                 'header',
                 'format',
                 'enum_extra',
+                'graph_extra',
                 'late_flag_extra',
                 'filter_xpath_extra',
                 'calc_xpath_extra',
@@ -406,6 +425,7 @@ var DetailScreenConfig = (function () {
                 // Prevent this from running on page load before init
                 if (that.format.ui.parent().length > 0) {
                     that.enum_extra.ui.detach();
+                    that.graph_extra.ui.detach();
                     that.late_flag_extra.ui.detach();
                     that.filter_xpath_extra.ui.detach();
                     that.calc_xpath_extra.ui.detach();
@@ -413,6 +433,11 @@ var DetailScreenConfig = (function () {
 
                     if (this.val() === "enum" || this.val() === "enum-image") {
                         that.format.ui.parent().append(that.enum_extra.ui);
+                    } else if (this.val() === "graph") {
+                        // Replace format select with edit button
+                        var parent = that.format.ui.parent();
+                        parent.empty();
+                        parent.append(that.graph_extra.ui);
                     } else if (this.val() === 'late-flag') {
                         that.format.ui.parent().append(that.late_flag_extra.ui);
                         var input = that.late_flag_extra.ui.find('input');
@@ -463,11 +488,20 @@ var DetailScreenConfig = (function () {
                 column.field = this.field.val();
                 column.header[this.lang] = this.header.val();
                 column.format = this.format.val();
-                column['enum'] = this.enum_extra.getItems();
+                column.enum = this.enum_extra.getItems();
+                column.graph_configuration =
+                        this.format.val() == "graph" ? this.graph_extra.val() : null;
                 column.late_flag = parseInt(this.late_flag_extra.val(), 10);
                 column.time_ago_interval = parseFloat(this.time_ago_extra.val());
                 column.filter_xpath = this.filter_xpath_extra.val();
                 column.calc_xpath = this.calc_xpath_extra.val();
+                if (this.isTab) {
+                    // Note: starting_index is added by Screen.serialize
+                    return {
+                        starting_index: this.starting_index,
+                        header: column.header
+                    };
+                }
                 return column;
             },
             setGrip: function (grip) {
@@ -515,6 +549,7 @@ var DetailScreenConfig = (function () {
             this.lang = options.lang;
             this.langs = options.langs || [];
             this.properties = options.properties;
+            this.childCaseTypes = options.childCaseTypes;
             // The column key is used to retreive the columns from the spec and
             // as the name of the key in the data object that is sent to the
             // server on save.
@@ -527,6 +562,7 @@ var DetailScreenConfig = (function () {
             this.containsSortConfiguration = options.containsSortConfiguration;
             this.containsParentConfiguration = options.containsParentConfiguration;
             this.containsFilterConfiguration = options.containsFilterConfiguration;
+            this.allowsTabs = options.allowsTabs;
 
             this.fireChange = function() {
                 that.fire('change');
@@ -538,6 +574,7 @@ var DetailScreenConfig = (function () {
                 column.header.setEdit(that.edit);
                 column.format.setEdit(that.edit);
                 column.enum_extra.setEdit(that.edit);
+                column.graph_extra.edit(that.edit);
                 column.late_flag_extra.setEdit(that.edit);
                 column.filter_xpath_extra.setEdit(that.edit);
                 column.calc_xpath_extra.setEdit(that.edit);
@@ -547,6 +584,7 @@ var DetailScreenConfig = (function () {
 
                 column.field.on('change', function () {
                     column.header.val(getPropertyTitle(this.val()));
+                    column.header.fire("change");
                     if (this.val() && !DetailScreenConfig.field_val_re.test(this.val())) {
                         column.format_warning.show().parent().addClass('error');
                     } else {
@@ -560,6 +598,36 @@ var DetailScreenConfig = (function () {
             };
 
             columns = spec[this.columnKey].columns;
+            // Inject tabs into te columns list:
+            var tabs = spec[this.columnKey].tabs || [];
+            for (i = 0; i < tabs.length; i++){
+                columns.splice(
+                    tabs[i].starting_index + i,
+                    0,
+                    {isTab: true, header: tabs[i].header}
+                );
+            }
+            var $addTabDiv = $('.add-tab', this.$location);
+            if ($addTabDiv.length) {
+                ko.applyBindings(
+                    {
+                        addTab: function(){
+                            var col = that.initColumnAsColumn(Column.init({
+                                isTab: true,
+                                model: 'tab'
+                            }, that));
+                            // This copies the add-column event handler, but
+                            // puts it first and doesn't copy the object.
+                            that.columns.splice(0, 0, col);
+                            var $tr = that.addColumn(col, that.$columns, 0);
+                            $tr.detach().insertBefore(that.$columns.find('tr:nth-child(1)'));
+                            $tr.hide().fadeIn('slow');
+                            that.fire('change');
+                        }
+                    },
+                    $addTabDiv.get(0)
+                );
+            }
 
             // Filters are a type of DetailColumn on the server. Don't display
             // them with the other columns though
@@ -637,12 +705,23 @@ var DetailScreenConfig = (function () {
         Screen.prototype = {
             save: function () {
                 //Only save if property names are valid
+                var containsTab = false;
                 for (var i = 0; i < this.columns.length; i++){
                     var column = this.columns[i];
-                    if (! DetailScreenConfig.field_val_re.test(column.field.val())){
-                        // column won't have format_warning showing if it's empty
-                        column.format_warning.show().parent().addClass('error');
-                        alert("There are errors in your property names");
+                    if (! column.isTab) {
+                        if (!DetailScreenConfig.field_val_re.test(column.field.val())) {
+                            // column won't have format_warning showing if it's empty
+                            column.format_warning.show().parent().addClass('error');
+                            alert("There are errors in your property names");
+                            return;
+                        }
+                    } else {
+                        containsTab = true;
+                    }
+                }
+                if (containsTab){
+                    if (! this.columns[0].isTab){
+                        alert("All properties must be below a tab");
                         return;
                     }
                 }
@@ -660,7 +739,28 @@ var DetailScreenConfig = (function () {
                 var data = {
                     type: JSON.stringify(this.type)
                 };
-                data[this.columnKey] = JSON.stringify(_.map(this.columns, function(c){return c.serialize();}));
+
+                // Add columns
+                data[this.columnKey] = JSON.stringify(_.map(
+                    _.filter(this.columns, function(c){return ! c.isTab}),
+                    function(c){return c.serialize();}
+                ));
+
+                // Add tabs
+                // calculate the starting index for each Tab
+                var acc = 0;
+                for (var j=0; j < this.columns.length; j++){
+                    var c = this.columns[j];
+                    if (c.isTab){
+                        c.starting_index = acc;
+                    } else {
+                        acc++;
+                    }
+                }
+                data['tabs'] = JSON.stringify(_.map(
+                    _.filter(this.columns, function(c){return c.isTab}),
+                    function(c){return c.serialize();}
+                ));
 
                 if (this.containsParentConfiguration) {
                     var parentSelect;
@@ -689,19 +789,31 @@ var DetailScreenConfig = (function () {
                     $('<td/>').addClass('detail-screen-icon').appendTo($tr);
                 }
 
-                if (!column.field.edit) {
-                    column.field.setHtml(CC_DETAIL_SCREEN.getFieldHtml(column.field.val()));
-                }
-                var dsf = $('<td/>').addClass('detail-screen-field control-group').append(column.field.ui);
-                dsf.append(column.format_warning);
-                if (column.field.value && !DetailScreenConfig.field_val_re.test(column.field.value)) {
-                    column.format_warning.show().parent().addClass('error');
-                }
-                dsf.appendTo($tr);
 
-                $('<td/>').addClass('detail-screen-header').append(column.header.ui).appendTo($tr);
-                $('<td/>').addClass('detail-screen-format').append(column.format.ui).appendTo($tr);
-                column.format.fire('change');
+                if (! column.isTab) {
+                    if (!column.field.edit) {
+                        column.field.setHtml(CC_DETAIL_SCREEN.getFieldHtml(column.field.val()));
+                    }
+                    var dsf = $('<td/>').addClass('detail-screen-field control-group').append(column.field.ui);
+                    dsf.append(column.format_warning);
+                    if (column.field.value && !DetailScreenConfig.field_val_re.test(column.field.value)) {
+                        column.format_warning.show().parent().addClass('error');
+                    }
+                    dsf.appendTo($tr);
+
+                    $('<td/>').addClass('detail-screen-header').append(column.header.ui).appendTo($tr);
+                    $('<td/>').addClass('detail-screen-format').append(column.format.ui).appendTo($tr);
+                    column.format.fire('change');
+                } else {
+                    // Color this row
+                    $tr.addClass("info");
+
+                    // Add the input
+                    var $cell = $('<td colspan="3"></td>').appendTo($tr);
+                    // This is sorta hacky because I'm digging into the uiElement.input ...
+                    column.header.ui.appendTo($cell).addClass('input-prepend').prepend($('<span class="add-on">Tab:</span>'));
+                    // TODO: Fix the language badge
+                }
 
                 if (this.edit) {
                     $('<td/>').addClass('detail-screen-icon').append(
@@ -758,6 +870,11 @@ var DetailScreenConfig = (function () {
                             $('<li class="add-calculation-item"><a>Calculation</a></li>')
                         );
                     }
+                    if (this.config.graphEnabled){
+                        buttonDropdownItems.push(
+                            $('<li class="add-graph-item"><a>Graph</a></li>')
+                        );
+                    }
                     $addButton = $(
                         '<div class="btn-group">' +
                             '<button class="btn add-property-item">Add Property</button>' +
@@ -780,21 +897,22 @@ var DetailScreenConfig = (function () {
                         }
                     }
 
+                    var redrawOnAddItem = false;
+                    if (_.isEmpty(that.columns)) {
+                        // Only the button has been drawn, so we want to
+                        // render again, this time with a table.
+                        redrawOnAddItem = true;
+                    }
                     var addItem = function(columnConfiguration) {
                         var col;
-                        var redraw = false;
-                        if (_.isEmpty(that.columns)) {
-                            // Only the button has been drawn, so we want to
-                            // render again, this time with a table.
-                            redraw = true;
-                        }
                         col = that.initColumnAsColumn(
                             Column.init(columnConfiguration, that)
                         );
                         that.fire('add-column', col);
-                        if (redraw) {
+                        if (redrawOnAddItem) {
                             that.render();
                         }
+                        return col;
                     };
                     $(".add-property-item", $addButton).click(function () {
                         addItem({hasAutocomplete: true});
@@ -802,11 +920,14 @@ var DetailScreenConfig = (function () {
                     $(".add-calculation-item", $addButton).click(function () {
                         addItem({hasAutocomplete: false, format: "calculate"});
                     });
+                    $(".add-graph-item", $addButton).click(function() {
+                        addItem({hasAutocomplete: false, format: "graph"});
+                    });
 
                     if (! _.isEmpty(this.columns)) {
-                        $table = $('<table class="table table-condensed"/>'
-                        ).addClass('detail-screen-table'
-                        ).appendTo($box);
+                        $table = $(
+                            '<table class="table table-condensed"/>'
+                        ).addClass('detail-screen-table').appendTo($box);
                         $thead = $('<thead/>').appendTo($table);
 
                         $tr = $('<tr/>').appendTo($thead);
@@ -891,6 +1012,7 @@ var DetailScreenConfig = (function () {
             }
             this.edit = spec.edit;
             this.saveUrl = spec.saveUrl;
+            this.graphEnabled = spec.graphEnabled;
             this.calculationEnabled = spec.calculationEnabled;
 
             var filter_xpath = spec.state.short.filter;
@@ -917,9 +1039,11 @@ var DetailScreenConfig = (function () {
                         saveUrl: that.saveUrl,
                         $location: $location,
                         columnKey: columnType,
+                        childCaseTypes: spec.childCaseTypes,
                         containsSortConfiguration: columnType == "short",
                         containsParentConfiguration: columnType == "short",
-                        containsFilterConfiguration: columnType == "short"
+                        containsFilterConfiguration: columnType == "short",
+                        allowsTabs: columnType == 'long'
                     }
                 );
                 that.screens.push(screen);

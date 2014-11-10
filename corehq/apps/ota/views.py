@@ -1,3 +1,4 @@
+import time
 from corehq.apps.domain.models import Domain
 from corehq.apps.users.models import CouchUser
 from corehq.util.view_utils import json_error
@@ -51,3 +52,12 @@ def get_restore_response(domain, couch_user, since=None, version='1.0',
         domain=project
     )
     return restore_config.get_response()
+
+
+def historical_forms(request, domain):
+    def data():
+        for i in range(10):
+            time.sleep(1)
+            yield '{}\n'.format(i)
+
+    return HttpResponse(data())

@@ -26,6 +26,7 @@ from corehq.apps.hqwebapp.async_handler import AsyncHandlerMixin
 from corehq.apps.smsbillables.async_handlers import SMSRatesAsyncHandler, SMSRatesSelect2AsyncHandler
 from corehq.apps.smsbillables.forms import SMSRateCalculatorForm
 from corehq.apps.users.models import DomainInvitation
+from corehq.apps.fixtures.models import FixtureDataType
 from corehq.toggles import NAMESPACE_DOMAIN
 from corehq.util.context_processors import get_domain_type
 from dimagi.utils.couch.resource_conflict import retry_resource
@@ -63,7 +64,7 @@ from corehq.apps.domain.forms import (
     DomainGlobalSettingsForm, DomainMetadataForm, SnapshotSettingsForm,
     SnapshotApplicationForm, DomainDeploymentForm, DomainInternalForm,
     ConfirmNewSubscriptionForm, ProBonoForm, EditBillingAccountInfoForm,
-    ConfirmSubscriptionRenewalForm,
+    ConfirmSubscriptionRenewalForm, SnapshotFixtureForm,
 )
 from corehq.apps.domain.models import Domain, LICENSES
 from corehq.apps.domain.utils import normalize_domain_name
@@ -110,6 +111,20 @@ def select(request, domain_select_template='domain/select.html'):
         'open_invitations': open_invitations,
     }
     return render(request, domain_select_template, additional_context)
+
+
+@require_superuser
+def incomplete_email(request,
+                     incomplete_email_template='domain/incomplete_email.html'):
+    from corehq.apps.domain.tasks import (
+        incomplete_self_started_domains,
+        incomplete_domains_to_email
+    )
+    context = {
+        'self_started': incomplete_self_started_domains,
+        'dimagi_owned': incomplete_domains_to_email,
+    }
+    return render(request, incomplete_email_template, context)
 
 
 class DomainViewMixin(object):
@@ -1455,6 +1470,7 @@ class CreateNewExchangeSnapshotView(BaseAdminProjectSettingsView):
         context = {
             'form': self.snapshot_settings_form,
             'app_forms': self.app_forms,
+            'fixture_forms': self.fixture_forms,
             'can_publish_as_org': self.can_publish_as_org,
             'autocomplete_fields': ('project_type', 'phone_model', 'user_type', 'city', 'countries', 'region'),
         }
@@ -1522,6 +1538,24 @@ class CreateNewExchangeSnapshotView(BaseAdminProjectSettingsView):
                                                       or self.published_snapshot == self.domain_object)
                                       }, prefix=app.id)))
         return app_forms
+
+    @property
+    def fixture_forms(self):
+        fixture_forms = []
+        for fixture in FixtureDataType.by_domain(self.domain_object.name):
+            fixture.id = fixture._id
+            if self.request.method == 'POST':
+                fixture_forms.append((fixture,
+                    SnapshotFixtureForm(self.request.POST, prefix=fixture._id)))
+            else:
+                fixture_forms.append((fixture,
+                                  SnapshotFixtureForm(
+                                      initial={
+                                          'publish': (self.published_snapshot is None
+                                                      or self.published_snapshot == self.domain_object)
+                                      }, prefix=fixture._id)))
+
+        return fixture_forms
 
     @property
     @memoized
@@ -1592,8 +1626,14 @@ class CreateNewExchangeSnapshotView(BaseAdminProjectSettingsView):
             if not request.POST.get('share_reminders', False):
                 ignore.append('CaseReminderHandler')
 
+            copy_by_id = set()
+            for k in request.POST.keys():
+                if k.endswith("-publish"):
+                    copy_by_id.add(k[:-len("-publish")])
+
             old = self.domain_object.published_snapshot()
-            new_domain = self.domain_object.save_snapshot(ignore=ignore)
+            new_domain = self.domain_object.save_snapshot(ignore=ignore,
+                                                          copy_by_id=copy_by_id)
             new_domain.license = new_license
             new_domain.description = request.POST['description']
             new_domain.short_description = request.POST['short_description']
@@ -1635,26 +1675,29 @@ class CreateNewExchangeSnapshotView(BaseAdminProjectSettingsView):
 
             for application in new_domain.full_applications():
                 original_id = application.copied_from._id
-                if request.POST.get("%s-publish" % original_id, False):
-                    application.name = request.POST["%s-name" % original_id]
-                    application.description = request.POST["%s-description" % original_id]
-                    date_picked = request.POST["%s-deployment_date" % original_id]
-                    try:
-                        date_picked = dateutil.parser.parse(date_picked)
-                        if date_picked.year > 2009:
-                            application.deployment_date = date_picked
-                    except Exception:
-                        pass
-                    #if request.POST.get("%s-name" % original_id):
-                    application.phone_model = request.POST["%s-phone_model" % original_id]
-                    application.attribution_notes = request.POST["%s-attribution_notes" % original_id]
-                    application.user_type = request.POST["%s-user_type" % original_id]
+                application.name = request.POST["%s-name" % original_id]
+                application.description = request.POST["%s-description" % original_id]
+                date_picked = request.POST["%s-deployment_date" % original_id]
+                try:
+                    date_picked = dateutil.parser.parse(date_picked)
+                    if date_picked.year > 2009:
+                        application.deployment_date = date_picked
+                except Exception:
+                    pass
+                application.phone_model = request.POST["%s-phone_model" % original_id]
+                application.attribution_notes = request.POST["%s-attribution_notes" % original_id]
+                application.user_type = request.POST["%s-user_type" % original_id]
 
-                    if not new_domain.multimedia_included:
-                        application.multimedia_map = {}
-                    application.save()
-                else:
-                    application.delete()
+                if not new_domain.multimedia_included:
+                    application.multimedia_map = {}
+                application.save()
+
+            for fixture in FixtureDataType.by_domain(new_domain.name):
+                old_id = FixtureDataType.by_domain_tag(self.domain_object.name,
+                                                       fixture.tag).first()._id
+                fixture.description = request.POST["%s-description" % old_id]
+                fixture.save()
+
             if new_domain is None:
                 messages.error(request, _("Version creation failed; please try again"))
             else:

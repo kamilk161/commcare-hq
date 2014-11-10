@@ -122,7 +122,7 @@ from corehq.apps.app_manager.models import (
     get_app,
     load_case_reserved_words,
     str_to_cls,
-)
+    DetailTab)
 from corehq.apps.app_manager.models import import_app as import_app_util, SortElement
 from dimagi.utils.web import get_url_base
 from corehq.apps.app_manager.decorators import safe_download, no_conflict_require_POST, \
@@ -130,6 +130,9 @@ from corehq.apps.app_manager.decorators import safe_download, no_conflict_requir
 from django.contrib import messages
 from django_prbac.exceptions import PermissionDenied
 from django_prbac.utils import ensure_request_has_privilege
+# Numbers in paths is prohibited, hence the use of importlib
+import importlib
+FilterMigration = importlib.import_module('corehq.apps.app_manager.migrations.0002_add_filter_to_Detail').Migration
 
 logger = logging.getLogger(__name__)
 
@@ -289,6 +292,17 @@ def copy_app(req, domain):
         return copy_app_check_domain(req, form.cleaned_data['domain'], form.cleaned_data['name'], app_id)
     else:
         return view_generic(req, domain, app_id=app_id, copy_app_form=form)
+
+
+@require_can_edit_apps
+def migrate_app_filters(req, domain, app_id):
+    message = "Migration succeeded!"
+    try:
+        app = get_app(domain, app_id)
+        FilterMigration.migrate_app(app)
+    except:
+        message = "Migration failed :("
+    return HttpResponse(message, content_type='text/plain')
 
 
 @require_can_edit_apps
@@ -810,6 +824,7 @@ def get_module_view_context_and_template(app, module):
                     'sort_elements': json.dumps(get_sort_elements(module.goal_details.short)),
                     'short': module.goal_details.short,
                     'long': module.goal_details.long,
+                    'child_case_types': list(module.get_child_case_types()),
                 },
                 {
                     'label': _('Task List'),
@@ -820,6 +835,7 @@ def get_module_view_context_and_template(app, module):
                     'sort_elements': json.dumps(get_sort_elements(module.task_details.short)),
                     'short': module.task_details.short,
                     'long': module.task_details.long,
+                    'child_case_types': list(module.get_child_case_types()),
                 },
             ],
         }
@@ -836,6 +852,7 @@ def get_module_view_context_and_template(app, module):
                 'sort_elements': json.dumps(get_sort_elements(module.case_details.short)),
                 'short': module.case_details.short,
                 'long': module.case_details.long,
+                'child_case_types': list(module.get_child_case_types()),
             }]
 
             if app.commtrack_enabled:
@@ -847,6 +864,7 @@ def get_module_view_context_and_template(app, module):
                     'properties': ['name'] + commtrack_ledger_sections(app.commtrack_requisition_mode),
                     'sort_elements': json.dumps(get_sort_elements(module.product_details.short)),
                     'short': module.product_details.short,
+                    'child_case_types': list(module.get_child_case_types()),
                 })
 
             return details
@@ -869,6 +887,7 @@ def get_module_view_context_and_template(app, module):
                     'short': module.case_details.short,
                     'long': module.case_details.long,
                     'parent_select': module.parent_select,
+                    'child_case_types': list(module.get_child_case_types()),
                 },
             ],
             'case_list_form_options': case_list_form_options(case_type),
@@ -971,6 +990,31 @@ def view_generic(req, domain, app_id=None, module_id=None, form_id=None, is_user
     # Pass form for Copy Application to template:
     context.update({
         'copy_app_form': copy_app_form if copy_app_form is not None else CopyApplicationForm(app_id)
+    })
+
+    from corehq.apps.hqmedia.controller import MultimediaIconUploadController
+    from corehq.apps.hqmedia.views import (
+        ProcessJavaIconFileUploadView,
+        ProcessAndroidIconFileUploadView,
+    )
+    context.update({
+        "sessionid": req.COOKIES.get('sessionid'),
+        'uploaders': [
+            MultimediaIconUploadController(
+                "hq_logo_java",
+                reverse(
+                    ProcessJavaIconFileUploadView.name,
+                    args=[domain, app_id],
+                )
+            ),
+            MultimediaIconUploadController(
+                "hq_logo_android",
+                reverse(
+                    ProcessAndroidIconFileUploadView.name,
+                    args=[domain, app_id],
+                )
+            ),
+        ],
     })
 
     response = render(req, template, context)
@@ -1410,6 +1454,7 @@ def edit_module_detail_screens(req, domain, app_id, module_id):
     detail_type = params.get('type')
     short = params.get('short', None)
     long = params.get('long', None)
+    tabs = params.get('tabs', None)
     filter = params.get('filter', ())
     parent_select = params.get('parent_select', None)
     sort_elements = params.get('sort_elements', None)
@@ -1433,6 +1478,9 @@ def edit_module_detail_screens(req, domain, app_id, module_id):
         detail.short.columns = map(DetailColumn.wrap, short)
     if long is not None:
         detail.long.columns = map(DetailColumn.wrap, long)
+    if tabs is not None and long is not None:
+        # Tabs only apply to the case detail page
+        detail.long.tabs = map(DetailTab.wrap, tabs)
     if filter != ():
         # Note that we use the empty tuple as the sentinel because a filter
         # value of None represents clearing the filter.

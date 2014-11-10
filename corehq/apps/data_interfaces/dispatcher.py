@@ -7,6 +7,8 @@ from corehq.apps.users.models import Permissions
 from django_prbac.exceptions import PermissionDenied
 from django_prbac.utils import ensure_request_has_privilege
 
+from dimagi.utils.decorators.profile import *
+
 require_can_edit_data = require_permission(Permissions.edit_data)
 
 
@@ -24,7 +26,7 @@ class DataInterfaceDispatcher(ProjectReportDispatcher):
     def deid_dispatch(self, request, *args, **kwargs):
         return super(DataInterfaceDispatcher, self).dispatch(request, *args, **kwargs)
 
-    def permissions_check(self, report, request, domain=None, is_navigation_check=False):
+    def permissions_check(self, report, request, domain=None, is_navigation_check=False, project=None):
         if is_navigation_check:
             from corehq.apps.reports.standard.export import DeidExportReport
             if report.split('.')[-1] in [DeidExportReport.__name__]:
@@ -32,7 +34,7 @@ class DataInterfaceDispatcher(ProjectReportDispatcher):
                     ensure_request_has_privilege(request, privileges.DEIDENTIFIED_DATA)
                 except PermissionDenied:
                     return False
-        return super(DataInterfaceDispatcher, self).permissions_check(report, request, domain)
+        return super(DataInterfaceDispatcher, self).permissions_check(report, request, domain, project=project)
 
 
 class EditDataInterfaceDispatcher(ReportDispatcher):
@@ -51,7 +53,7 @@ class EditDataInterfaceDispatcher(ReportDispatcher):
     def bulk_dispatch(self, request, *args, **kwargs):
         return super(EditDataInterfaceDispatcher, self).dispatch(request, *args, **kwargs)
 
-    def permissions_check(self, report, request, domain=None, is_navigation_check=False):
+    def permissions_check(self, report, request, domain=None, is_navigation_check=False, project=None):
         if is_navigation_check:
             from corehq.apps.importer.base import ImportCases
             if report.split('.')[-1] in [ImportCases.__name__]:
@@ -59,4 +61,4 @@ class EditDataInterfaceDispatcher(ReportDispatcher):
                     ensure_request_has_privilege(request, privileges.BULK_CASE_MANAGEMENT)
                 except PermissionDenied:
                     return False
-        return request.couch_user.can_edit_data(domain)
+        return request.couch_user.can_edit_data(domain, project=project)
