@@ -258,7 +258,7 @@ def sync_ilsgateway_location(domain, endpoint, ilsgateway_location, fetch_groups
             params=dict(with_historical_groups=1)
         )
 
-        historical_groups = Loc.from_json(location_object).historical_groups
+        historical_groups = Loc.from_json(location_object).historical_groups if Loc.from_json(location_object) else {}
     else:
         historical_groups = {}
     for date, groups in historical_groups.iteritems():
