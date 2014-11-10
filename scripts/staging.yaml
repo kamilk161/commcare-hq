@@ -43,6 +43,7 @@
 trunk: master
 name: autostaging
 branches:
+  - staging  # Ethan 11/09 - Too many effing merge conflicts
   - ptop-reindex  # DR 11/5
   - historical-forms  # DR 11/4
   - remove-hutch  # DR 10/28
@@ -55,7 +56,6 @@ branches:
   - revert-4205-revert-3841-86347-2 # Daniel 9/11
   #- help-text # j$  10/8  removed 11/3 by Daniel
   - masterlist-workflow # j$  10/8
-  - graphing+case-detail-tabs+double-management  # Ethan 11/09 -_-
   - graphing+double-management # SK 10/3
   - double-management+case-detail-tabs2 # Noah 11/6
   - double-management # SK 10/15
@@ -64,7 +64,6 @@ branches:
   - case-detail-tabs # Noah 11/6
   - share-fixtures # j$ 10/29
   - logos # Nick P 10/31
-  - hq-dropdown+custom_user_data # Noah 11/2
   - hq-dropdown # sravan 5/7
   - 142623-jstree-upgrade # Daniel 11/3
   # - photo-export # J$ 11/4

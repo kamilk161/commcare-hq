@@ -387,11 +387,12 @@ class Field(OrderedXmlObject):
     sort_node = NodeField('sort', Sort)
 
 
-class Action(OrderedXmlObject, DisplayNode):
+class Action(OrderedXmlObject):
     ROOT_NAME = 'action'
     ORDER = ('display', 'stack')
 
     stack = NodeField('stack', Stack)
+    display = NodeField('display', Display)
 
 
 class DetailVariable(XmlObject):
@@ -868,7 +869,7 @@ class SuiteGenerator(SuiteGeneratorBase):
                                         return d
                                     else:
                                         return None
-
+                                
                                 else:
                                     # Base case (has no tabs)
                                     for column_info in detail_column_infos[start:end]:
@@ -883,10 +884,13 @@ class SuiteGenerator(SuiteGeneratorBase):
                                         # add form action to detail
                                         form = module.get_form_by_unique_id(module.case_list_form.form_id)
                                         d.action = Action(
-                                            locale_id=self.id_strings.case_list_form_locale(module),
-                                            media_image=module.case_list_form.media_image,
-                                            media_audio=module.case_list_form.media_audio,
-                                            stack=Stack())
+                                            display=Display(
+                                                text=Text(locale_id=self.id_strings.case_list_form_locale(module)),
+                                                media_image=module.case_list_form.media_image,
+                                                media_audio=module.case_list_form.media_audio,
+                                            ),
+                                            stack=Stack()
+                                        )
                                         frame = CreateFrame()
                                         frame.add_command(self.id_strings.form_command(form))
                                         d.action.stack.add_frame(frame)
