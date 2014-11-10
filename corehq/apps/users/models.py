@@ -7,6 +7,7 @@ import re
 
 from django.utils import html, safestring
 from restkit.errors import NoMoreData
+from django import http
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
@@ -1800,6 +1801,14 @@ class WebUser(CouchUser, MultiMembershipMixin, OrgMembershipMixin, CommCareMobil
 
     location_id = StringProperty()
     program_id = StringProperty()
+
+    @classmethod
+    def wrap(cls, data, should_save=False):
+        if data['doc_type'] != 'WebUser':
+            raise http.Http404()
+
+        web_user = super(WebUser, cls).wrap(data, should_save=should_save)
+        return web_user
 
     def sync_from_old_couch_user(self, old_couch_user):
         super(WebUser, self).sync_from_old_couch_user(old_couch_user)
